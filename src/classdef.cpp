@@ -53,7 +53,7 @@
 //-----------------------------------------------------------------------------
 
 static QCString makeQualifiedNameWithTemplateParameters(const ClassDef *cd,
-    const ArgumentLists *actualParams,uint *actualParamIndex)
+    const ArgumentLists *actualParams,uint *actualParamIndex,bool forDisplay)
 {
   //bool optimizeOutputJava = Config_getBool(OPTIMIZE_OUTPUT_JAVA);
   bool hideScopeNames = Config_getBool(HIDE_SCOPE_NAMES);
@@ -65,7 +65,7 @@ static QCString makeQualifiedNameWithTemplateParameters(const ClassDef *cd,
     if (d->definitionType()==Definition::TypeClass)
     {
       const ClassDef *ocd=toClassDef(d);
-      scName = ocd->qualifiedNameWithTemplateParameters(actualParams,actualParamIndex);
+      scName = ocd->qualifiedNameWithTemplateParameters(actualParams,actualParamIndex,forDisplay);
     }
     else if (!hideScopeNames)
     {
@@ -88,7 +88,7 @@ static QCString makeQualifiedNameWithTemplateParameters(const ClassDef *cd,
       const ArgumentList &al = actualParams->at(*actualParamIndex);
       if (!isSpecialization)
       {
-        scName+=tempArgListToString(al,lang);
+        scName+=tempArgListToString(al,lang,true,forDisplay);
       }
       (*actualParamIndex)++;
     }
@@ -96,7 +96,7 @@ static QCString makeQualifiedNameWithTemplateParameters(const ClassDef *cd,
     {
       if (!isSpecialization)
       {
-        scName+=tempArgListToString(cd->templateArguments(),lang);
+        scName+=tempArgListToString(cd->templateArguments(),lang,true,forDisplay);
       }
     }
   }
@@ -118,7 +118,7 @@ static QCString makeDisplayName(const ClassDef *cd,bool includeScope)
   {
     if (includeScope)
     {
-      n=cd->qualifiedNameWithTemplateParameters();
+      n=cd->qualifiedNameWithTemplateParameters(0,0,true);
     }
     else
     {
@@ -1289,7 +1289,7 @@ static void searchTemplateSpecs(/*in*/  const Definition *d,
       result.push_back(cd->templateArguments());
       if (!isSpecialization)
       {
-        name+=tempArgListToString(cd->templateArguments(),lang);
+        name+=tempArgListToString(cd->templateArguments(),lang,true,true);
       }
     }
   }
@@ -1310,21 +1310,36 @@ void ClassDefImpl::writeTemplateSpec(OutputList &ol,const Definition *d,
     ol.startCompoundTemplateParams();
     for (const ArgumentList &al : specs)
     {
-      ol.docify("template<");
+      ol.docify("template <");
       auto it = al.begin();
+      bool first = true;
       while (it!=al.end())
       {
         Argument a = *it;
-        linkifyText(TextGeneratorOLImpl(ol), // out
-          d,                       // scope
-          getFileDef(),            // fileScope
-          this,                    // self
-          a.type,                  // text
-          FALSE                    // autoBreak
-          );
+        if (a->isHidden())
+        {
+          ++it;
+          continue;
+        }
+
+        if (!first)
+          ol.docify(", ");
+        first = false;
+
+        if (!a.type.isEmpty())
+        {
+          linkifyText(TextGeneratorOLImpl(ol), // out
+            d,                       // scope
+            getFileDef(),            // fileScope
+            this,                    // self
+            a.type,                  // text
+            FALSE                    // autoBreak
+            );
+        }
         if (!a.name.isEmpty())
         {
-          ol.docify(" ");
+          if (!a.type.isEmpty())
+            ol.docify(" ");
           ol.docify(a.name);
         }
         if (a.defval.length()!=0)
@@ -1414,6 +1429,34 @@ void ClassDefImpl::writeDetailedDocumentationBody(OutputList &ol) const
     ol.generateDoc(docFile(),docLine(),this,0,documentation(),TRUE,FALSE,
                    QCString(),FALSE,FALSE,Config_getBool(MARKDOWN_SUPPORT));
   }
+  
+  ArgumentList *templateDocArgList = templateMaster() ? templateMaster()->templateArguments() : templateArguments();
+  
+  if (templateDocArgList!=0 && templateDocArgList->hasTemplateDocumentation() && !templateDocArgList->allHidden())
+  {
+    QCString paramDocs;
+    ArgumentListIterator ali(*templateDocArgList);
+    Argument *a;
+    // convert the parameter documentation into a list of @tparam commands
+    for (ali.toFirst();(a=ali.current());++ali)
+    {
+      if (a->hasTemplateDocumentation() && !a->isHidden())
+      {
+        QCString direction = extractDirection(a->docs);
+        paramDocs+="@tparam"+direction+" "+getTemplateArgumentName(a->type, a->name)+" "+a->docs;
+      }
+    }
+    // feed the result to the documentation parser
+    ol.generateDoc(
+        docFile(),docLine(),
+        this,
+        0,         // memberDef
+        paramDocs,    // docStr
+        TRUE,         // indexWords
+        FALSE         // isExample
+        );
+  }
+  
   // write type constraints
   writeTypeConstraints(ol,this,m_impl->typeConstraints);
 
@@ -1467,9 +1510,12 @@ void ClassDefImpl::writeDetailedDescription(OutputList &ol, const QCString &/*pa
       ol.popGeneratorState();
     }
 
-    ol.startGroupHeader();
-    ol.parseText(title);
-    ol.endGroupHeader();
+    if (title != " ")
+    {
+      ol.startGroupHeader();
+      ol.parseText(title);
+      ol.endGroupHeader();
+    }
 
     writeDetailedDocumentationBody(ol);
   }
@@ -1525,6 +1571,7 @@ void ClassDefImpl::showUsedFiles(OutputList &ol) const
     ol.endParagraph();
   ol.popGeneratorState();
   ol.disable(OutputGenerator::Docbook);
+    ol.startSourceDef();
     ol.parseText(generatedFromFiles());
   ol.enable(OutputGenerator::Docbook);
 
@@ -1584,6 +1631,7 @@ void ClassDefImpl::showUsedFiles(OutputList &ol) const
   }
   if (!first) ol.endItemList();
 
+  ol.endSourceDef();
   ol.popGeneratorState();
 }
 
@@ -4096,7 +4144,7 @@ ArgumentLists ClassDefImpl::getTemplateParameterLists() const
 }
 
 QCString ClassDefImpl::qualifiedNameWithTemplateParameters(
-    const ArgumentLists *actualParams,uint *actualParamIndex) const
+    const ArgumentLists *actualParams,uint *actualParamIndex,bool forDisplay) const
 {
   return makeQualifiedNameWithTemplateParameters(this,actualParams,actualParamIndex);
 }

@@ -31,7 +31,7 @@
     padding: 0;
     line-height: 1em;
     border:none;
-    color: #909090;
+    color: ##90;
     outline: none;
     font-family: Arial, Verdana, sans-serif;
     -webkit-border-radius: 0px;
@@ -71,7 +71,7 @@
 }
 
 .MSearchBoxActive #MSearchField {
-    color: #000000;
+    color: ##00;
 }
 
 #main-menu > li:last-child {

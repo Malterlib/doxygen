@@ -18,8 +18,8 @@ h1.groupheader {
 }
 
 h2.groupheader {
-	border-bottom: 1px solid #A9A9A9;
-	color: #585858;
+	border-bottom: 1px solid ##A9;
+	color: ##58;
 	font-size: 150%;
 	font-weight: normal;
 	margin-top: 1.75em;
@@ -95,8 +95,8 @@ h3.version {
 }
 
 div.qindex, div.navtab{
-	background-color: #F1F1F1;
-	border: 1px solid #BDBDBD;
+	background-color: ##F1;
+	border: 1px solid ##BD;
 	text-align: center;
 }
 
@@ -112,13 +112,13 @@ div.navtab {
 /* @group Link Styling */
 
 a {
-	color: #646464;
+	color: ##64;
 	font-weight: normal;
 	text-decoration: none;
 }
 
 .contents a:visited {
-	color: #747474;
+	color: ##74;
 }
 
 a:hover {
@@ -131,13 +131,13 @@ a.qindex {
 
 a.qindexHL {
 	font-weight: bold;
-	background-color: #B8B8B8;
-	color: #ffffff;
-	border: 1px double #A8A8A8;
+	background-color: ##B8;
+	color: ##ff;
+	border: 1px double ##A8;
 }
 
 .contents a.qindexHL:visited {
-        color: #ffffff;
+        color: ##ff;
 }
 
 a.el {
@@ -177,8 +177,8 @@ pre.fragment {
 div.fragment {
         padding: 0px;
         margin: 4px 8px 4px 2px;
-	background-color: #FCFCFC;
-	border: 1px solid #D5D5D5;
+	background-color: ##FC;
+	border: 1px solid ##D5;
 }
 
 div.line {
@@ -223,15 +223,15 @@ span.lineno {
 	padding-right: 4px;
 	text-align: right;
 	border-right: 2px solid #0F0;
-	background-color: #E8E8E8;
+	background-color: ##E8;
         white-space: pre;
 }
 span.lineno a {
-	background-color: #D8D8D8;
+	background-color: ##D8;
 }
 
 span.lineno a:hover {
-	background-color: #C8C8C8;
+	background-color: ##C8;
 }
 
 .lineno {
@@ -244,21 +244,21 @@ span.lineno a:hover {
 }
 
 div.ah, span.ah {
-	background-color: black;
+	background-color: ##00;
 	font-weight: bold;
-	color: #ffffff;
+	color: ##ff;
 	margin-bottom: 3px;
 	margin-top: 3px;
 	padding: 0.2em;
-	border: solid thin #333;
+	border: solid thin ##30;
 	border-radius: 0.5em;
 	-webkit-border-radius: .5em;
 	-moz-border-radius: .5em;
-	box-shadow: 2px 2px 3px #999;
-	-webkit-box-shadow: 2px 2px 3px #999;
+	box-shadow: 2px 2px 3px ##90;
+	-webkit-box-shadow: 2px 2px 3px ##90;
 	-moz-box-shadow: rgba(0, 0, 0, 0.15) 2px 2px 2px;
-	background-image: -webkit-gradient(linear, left top, left bottom, from(#eee), to(#000),color-stop(0.3, #444));
-	background-image: -moz-linear-gradient(center top, #eee 0%, #444 40%, #000 110%);
+	background-image: -webkit-gradient(linear, left top, left bottom, from(##ee), to(##00),color-stop(0.3, ##40));
+	background-image: -moz-linear-gradient(center top, ##e0 0%, ##40 40%, ##00 110%);
 }
 
 div.classindex ul {
@@ -282,8 +282,8 @@ div.groupText {
 }
 
 body {
-        background-color: #CCCCCC;
-        color: black;
+        background-color: ##CC;
+        color: ##00;
         margin: 0;
 }
 
@@ -303,9 +303,9 @@ div.contents {
 }
 
 td.indexkey {
-	background-color: #F1F1F1;
+	background-color: ##F1;
 	font-weight: bold;
-	border: 1px solid #D5D5D5;
+	border: 1px solid ##D5;
 	margin: 2px 0px 2px 0;
 	padding: 2px 10px;
         white-space: nowrap;
@@ -313,14 +313,14 @@ td.indexkey {
 }
 
 td.indexvalue {
-	background-color: #F1F1F1;
-	border: 1px solid #D5D5D5;
+	background-color: ##F1;
+	border: 1px solid ##D5;
 	padding: 2px 10px;
 	margin: 2px 0px;
 }
 
 tr.memlist {
-	background-color: #F2F2F2;
+	background-color: ##F2;
 }
 
 p.formulaDsp {
@@ -403,8 +403,8 @@ span.vhdllogic {
 }
 
 blockquote {
-        background-color: #F9F9F9;
-        border-left: 2px solid #B8B8B8;
+        background-color: ##F9;
+        border-left: 2px solid ##B8;
         margin: 0 24px 0 4px;
         padding: 0 12px 0 16px;
 }
@@ -437,18 +437,18 @@ td.tiny {
 .dirtab {
 	padding: 4px;
 	border-collapse: collapse;
-	border: 1px solid #BDBDBD;
+	border: 1px solid ##BD;
 }
 
 th.dirtab {
-	background: #F1F1F1;
+	background: ##F1;
 	font-weight: bold;
 }
 
 hr {
 	height: 0px;
 	border: none;
-	border-top: 1px solid #7A7A7A;
+	border-top: 1px solid ##7A;
 }
 
 hr.footer {
@@ -483,7 +483,7 @@ table.memberdecls {
 .mdescLeft, .mdescRight,
 .memItemLeft, .memItemRight,
 .memTemplItemLeft, .memTemplItemRight, .memTemplParams {
-	background-color: #FAFAFA;
+	background-color: ##FA;
 	border: none;
 	margin: 4px;
 	padding: 1px 0 0 8px;
@@ -491,7 +491,7 @@ table.memberdecls {
 
 .mdescLeft, .mdescRight {
 	padding: 0px 8px 4px 8px;
-	color: #555;
+	color: ##50;
 }
 
 .memSeparator {
@@ -510,7 +510,7 @@ table.memberdecls {
 }
 
 .memTemplParams {
-	color: #747474;
+	color: ##74;
         white-space: nowrap;
 	font-size: 80%;
 }
@@ -523,14 +523,14 @@ table.memberdecls {
 
 .memtemplate {
 	font-size: 80%;
-	color: #747474;
+	color: ##74;
 	font-weight: normal;
 	margin-left: 9px;
 }
 
 .memnav {
-	background-color: #F1F1F1;
-	border: 1px solid #BDBDBD;
+	background-color: ##F1;
+	border: 1px solid ##BD;
 	text-align: center;
 	margin: 2px;
 	margin-right: 15px;
@@ -568,16 +568,16 @@ table.memberdecls {
 }
 
 .memproto, dl.reflist dt {
-        border-top: 1px solid #C0C0C0;
-        border-left: 1px solid #C0C0C0;
-        border-right: 1px solid #C0C0C0;
+        border-top: 1px solid ##C0;
+        border-left: 1px solid ##C0;
+        border-right: 1px solid ##C0;
         padding: 6px 0px 6px 0px;
-        color: #3D3D3D;
+        color: ##3D;
         font-weight: bold;
         text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.9);
         background-image:url('nav_f.png');
         background-repeat:repeat-x;
-        background-color: #EAEAEA;
+        background-color: ##EA;
         /* opera specific markup */
         box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.15);
         border-top-right-radius: 4px;
@@ -594,15 +594,15 @@ table.memberdecls {
 }
 
 .memdoc, dl.reflist dd {
-        border-bottom: 1px solid #C0C0C0;      
-        border-left: 1px solid #C0C0C0;      
-        border-right: 1px solid #C0C0C0; 
+        border-bottom: 1px solid ##C0;
+        border-left: 1px solid ##C0;
+        border-right: 1px solid ##C0;
         padding: 6px 10px 2px 10px;
-        background-color: #FCFCFC;
+        background-color: ##FC;
         border-top-width: 0;
         background-image:url('nav_g.png');
         background-repeat:repeat-x;
-        background-color: #FFFFFF;
+        background-color: ##FF;
         /* opera specific markup */
         border-bottom-left-radius: 4px;
         border-bottom-right-radius: 4px;
@@ -685,11 +685,11 @@ span.mlabels {
 }
 
 span.mlabel {
-        background-color: #9A9A9A;
-        border-top:1px solid #848484;
-        border-left:1px solid #848484;
-        border-right:1px solid #D5D5D5;
-        border-bottom:1px solid #D5D5D5;
+        background-color: ##9A;
+        border-top:1px solid ##84;
+        border-left:1px solid ##84;
+        border-right:1px solid ##D5;
+        border-bottom:1px solid ##D5;
 	text-shadow: none;
 	color: white;
 	margin-right: 4px;
@@ -708,8 +708,8 @@ span.mlabel {
 
 div.directory {
         margin: 10px 0px;
-        border-top: 1px solid #B8B8B8;
-        border-bottom: 1px solid #B8B8B8;
+        border-top: 1px solid ##B8;
+        border-bottom: 1px solid ##B8;
         width: 100%;
 }
 
@@ -747,7 +747,7 @@ div.directory {
 
 .directory tr.even {
 	padding-left: 6px;
-	background-color: #F9F9F9;
+	background-color: ##F9;
 }
 
 .directory img {
@@ -765,11 +765,11 @@ div.directory {
         cursor: pointer;
         padding-left: 2px;
         padding-right: 2px;
-	color: #646464;
+	color: ##64;
 }
 
 .arrow {
-    color: #B8B8B8;
+    color: ##B8;
     -webkit-user-select: none;
     -khtml-user-select: none;
     -moz-user-select: none;
@@ -789,7 +789,7 @@ div.directory {
     height: 14px;
     width: 16px;
     display: inline-block;
-    background-color: #9A9A9A;
+    background-color: ##9A;
     color: white;
     text-align: center;
     border-radius: 4px;
@@ -854,7 +854,7 @@ div.dynheader {
 
 address {
 	font-style: normal;
-	color: #464646;
+	color: ##46;
 }
 
 table.doxtable caption {
@@ -868,13 +868,13 @@ table.doxtable {
 }
 
 table.doxtable td, table.doxtable th {
-	border: 1px solid #4A4A4A;
+	border: 1px solid ##4A;
 	padding: 3px 7px 2px;
 }
 
 table.doxtable th {
-	background-color: #5B5B5B;
-	color: #FFFFFF;
+	background-color: ##5B;
+	color: ##FF;
 	font-size: 110%;
 	padding-bottom: 4px;
 	padding-top: 5px;
@@ -883,7 +883,7 @@ table.doxtable th {
 table.fieldtable {
         /*width: 100%;*/
         margin-bottom: 10px;
-        border: 1px solid #C0C0C0;
+        border: 1px solid ##C0;
         border-spacing: 0px;
         -moz-border-radius: 4px;
         -webkit-border-radius: 4px;
@@ -899,8 +899,8 @@ table.fieldtable {
 
 .fieldtable td.fieldtype, .fieldtable td.fieldname {
         white-space: nowrap;
-        border-right: 1px solid #C0C0C0;
-        border-bottom: 1px solid #C0C0C0;
+        border-right: 1px solid ##C0;
+        border-bottom: 1px solid ##C0;
         vertical-align: top;
 }
 
@@ -909,7 +909,7 @@ table.fieldtable {
 }
 
 .fieldtable td.fielddoc {
-        border-bottom: 1px solid #C0C0C0;
+        border-bottom: 1px solid ##C0;
         /*width: 100%;*/
 }
 
@@ -928,9 +928,9 @@ table.fieldtable {
 .fieldtable th {
         background-image:url('nav_f.png');
         background-repeat:repeat-x;
-        background-color: #EAEAEA;
+        background-color: ##EA;
         font-size: 90%;
-        color: #3D3D3D;
+        color: ##3D;
         padding-bottom: 4px;
         padding-top: 5px;
         text-align:left;
@@ -940,7 +940,7 @@ table.fieldtable {
         -webkit-border-top-right-radius: 4px;
         border-top-left-radius: 4px;
         border-top-right-radius: 4px;
-        border-bottom: 1px solid #C0C0C0;
+        border-bottom: 1px solid ##C0;
 }
 
 
@@ -962,8 +962,8 @@ table.fieldtable {
 	background-position: 0 -5px;
 	height:30px;
 	line-height:30px;
-	color:#ABABAB;
-	border:solid 1px #D3D3D3;
+	color:##AB;
+	border:solid 1px ##D3;
 	overflow:hidden;
 	margin:0px;
 	padding:0px;
@@ -978,7 +978,7 @@ table.fieldtable {
 	background-image:url('bc_s.png');
 	background-repeat:no-repeat;
 	background-position:right;
-	color:#595959;
+	color:##59;
 }
 
 .navpath li.navelem a
@@ -987,7 +987,7 @@ table.fieldtable {
 	display:block;
 	text-decoration: none;
 	outline: none;
-	color: #434343;
+	color: ##43;
 	font-family: 'Lucida Grande',Geneva,Helvetica,Arial,sans-serif;
 	text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.9);
 	text-decoration: none;        
@@ -995,7 +995,7 @@ table.fieldtable {
 
 .navpath li.navelem a:hover
 {
-	color:#929292;
+	color:##92;
 }
 
 .navpath li.footer
@@ -1007,7 +1007,7 @@ table.fieldtable {
         background-image:none;
         background-repeat:no-repeat;
         background-position:right;
-        color:#595959;
+        color:##59;
         font-size: 8pt;
 }
 
@@ -1054,9 +1054,9 @@ div.header
 {
         background-image:url('nav_h.png');
         background-repeat:repeat-x;
-	background-color: #FAFAFA;
+	background-color: ##FA;
 	margin:  0px;
-	border-bottom: 1px solid #D5D5D5;
+	border-bottom: 1px solid ##D5;
         margin-left: auto;
         margin-right: auto;
         width: 800px;
@@ -1222,7 +1222,7 @@ dl.section dd {
 
 div.zoom
 {
-	border: 1px solid #AFAFAF;
+	border: 1px solid ##AF;
 }
 
 dl.citelist {
@@ -1230,7 +1230,7 @@ dl.citelist {
 }
 
 dl.citelist dt {
-        color:#545454;
+        color:##54;
         float:left;
         font-weight:bold;
         margin-right:10px;
@@ -1244,8 +1244,8 @@ dl.citelist dd {
 
 div.toc {
         padding: 14px 25px;
-        background-color: #F7F7F7;
-        border: 1px solid #E3E3E3;
+        background-color: ##F7;
+        border: 1px solid ##E3;
         border-radius: 7px 7px 7px 7px;
         float: right;
         height: auto;
@@ -1263,7 +1263,7 @@ div.toc li {
 
 div.toc h3 {
         font: bold 12px/1.2 Arial,FreeSans,sans-serif;
-	color: #747474;
+	color: ##74;
         border-bottom: 0 none;
         margin: 0;
 }
@@ -1403,12 +1403,12 @@ tr.heading h2 {
 }
 
 #powerTip.n:after, #powerTip.ne:after, #powerTip.nw:after {
-	border-top-color: #ffffff;
+	border-top-color: ##ff;
 	border-width: 10px;
 	margin: 0px -10px;
 }
 #powerTip.n:before {
-	border-top-color: #808080;
+	border-top-color: ##80;
 	border-width: 11px;
 	margin: 0px -11px;
 }
@@ -1431,13 +1431,13 @@ tr.heading h2 {
 }
 
 #powerTip.s:after, #powerTip.se:after, #powerTip.sw:after {
-	border-bottom-color: #ffffff;
+	border-bottom-color: ##ff;
 	border-width: 10px;
 	margin: 0px -10px;
 }
 
 #powerTip.s:before, #powerTip.se:before, #powerTip.sw:before {
-	border-bottom-color: #808080;
+	border-bottom-color: ##80;
 	border-width: 11px;
 	margin: 0px -11px;
 }
@@ -1458,13 +1458,13 @@ tr.heading h2 {
 	left: 100%;
 }
 #powerTip.e:after {
-	border-left-color: #ffffff;
+	border-left-color: ##ff;
 	border-width: 10px;
 	top: 50%;
 	margin-top: -10px;
 }
 #powerTip.e:before {
-	border-left-color: #808080;
+	border-left-color: ##80;
 	border-width: 11px;
 	top: 50%;
 	margin-top: -11px;
@@ -1474,13 +1474,13 @@ tr.heading h2 {
 	right: 100%;
 }
 #powerTip.w:after {
-	border-right-color: #ffffff;
+	border-right-color: ##ff;
 	border-width: 10px;
 	top: 50%;
 	margin-top: -10px;
 }
 #powerTip.w:before {
-	border-right-color: #808080;
+	border-right-color: ##80;
 	border-width: 11px;
 	top: 50%;
 	margin-top: -11px;

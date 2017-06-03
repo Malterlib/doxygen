@@ -419,7 +419,7 @@ class OutputGenerator : public BaseOutputDocInterface
     virtual void endMemberGroupDocs() = 0;
     virtual void startMemberGroup() = 0;
     virtual void endMemberGroup(bool) = 0;
-    virtual void insertMemberAlign(bool) = 0;
+    virtual void insertMemberAlign(bool,char) = 0;
     virtual void insertMemberAlignLeft(int,bool) = 0;
     virtual void startMemberDoc(const QCString &,const QCString &,
                                 const QCString &,const QCString &,int,int,bool) = 0;
@@ -468,15 +468,17 @@ class OutputGenerator : public BaseOutputDocInterface
     virtual void endPageDoc() {}
     virtual void startTextBlock(bool) = 0;
     virtual void endTextBlock(bool) = 0;
+    virtual void startSourceDef() {};
+    virtual void endSourceDef() {};
     virtual void lastIndexPage() = 0;
     virtual void startMemberDocPrefixItem() = 0;
     virtual void endMemberDocPrefixItem() = 0;
     virtual void startMemberDocName(bool) = 0;
     virtual void endMemberDocName() = 0;
-    virtual void startParameterType(bool,const QCString &key) = 0;
+    virtual void startParameterType(bool,const QCString &key,bool) = 0;
     virtual void endParameterType() = 0;
     virtual void startParameterName(bool) = 0;
-    virtual void endParameterName(bool,bool,bool) = 0;
+    virtual void endParameterName(bool,bool,bool,bool) = 0;
     virtual void startParameterList(bool) = 0;
     virtual void endParameterList() = 0;
     virtual void exceptionEntry(const QCString &,bool) = 0;

@@ -2409,7 +2409,7 @@ void RTFGenerator::endParamList()
   m_t << "}";
 }
 
-void RTFGenerator::startParameterType(bool first,const QCString &key)
+void RTFGenerator::startParameterType(bool first,const QCString &key,bool doLineBreak)
 {
   DBG_RTF(m_t << "{\\comment (startParameterType)}\n")
   if (!first && !key.isEmpty())

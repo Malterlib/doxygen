@@ -119,7 +119,7 @@ class RTFGenerator : public OutputGenerator
     void endMemberTemplateParams(const QCString &,const QCString &) {}
     void startCompoundTemplateParams() { startSubsubsection(); }
     void endCompoundTemplateParams() { endSubsubsection(); }
-    void insertMemberAlign(bool) {}
+    void insertMemberAlign(bool,char) {}
     void insertMemberAlignLeft(int,bool){}
 
     void writeRuler() { rtfwriteRuler_thin(); }
@@ -227,10 +227,10 @@ class RTFGenerator : public OutputGenerator
     void endMemberDocPrefixItem() {}
     void startMemberDocName(bool) {}
     void endMemberDocName() {}
-    void startParameterType(bool,const QCString &);
+    void startParameterType(bool,const QCString &,bool);
     void endParameterType();
     void startParameterName(bool) {}
-    void endParameterName(bool,bool,bool) {}
+    void endParameterName(bool,bool,bool,bool) {}
     void startParameterList(bool) {}
     void endParameterList() {}
     void exceptionEntry(const QCString &,bool);

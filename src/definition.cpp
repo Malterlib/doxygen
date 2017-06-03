@@ -890,6 +890,7 @@ QCString DefinitionImpl::getSourceAnchor() const
 /*! Write a reference to the source code defining this definition */
 void DefinitionImpl::writeSourceDef(OutputList &ol,const QCString &) const
 {
+  ol.startSourceDef();
   //printf("DefinitionImpl::writeSourceRef %d %p\n",bodyLine,bodyDef);
   QCString fn = getSourceFileBase();
   if (!fn.isEmpty())
@@ -935,6 +936,7 @@ void DefinitionImpl::writeSourceDef(OutputList &ol,const QCString &) const
       err("translation error: invalid markers in trDefinedAtLineInSourceFile()\n");
     }
   }
+  ol.endSourceDef();
 }
 
 void DefinitionImpl::setBodySegment(int defLine, int bls,int ble)

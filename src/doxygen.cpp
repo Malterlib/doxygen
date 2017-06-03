@@ -4310,7 +4310,7 @@ static void findTemplateInstanceRelation(const Entry *root,
   //printf("\n");
 
   bool existingClass = (templSpec ==
-                        tempArgListToString(templateClass->templateArguments(),root->lang,false)
+                        tempArgListToString(templateClass->templateArguments(),root->lang,true,false)
                        );
   if (existingClass) return;
 

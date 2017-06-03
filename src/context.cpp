@@ -4026,12 +4026,12 @@ class MemberContext::Private : public DefinitionContext<MemberContext::Private>
     }
     TemplateVariant createParamDocs() const
     {
-      if (m_memberDef->argumentList().hasDocumentation())
+      if (m_memberDef->argumentList().hasDocumentation() && !m_memberDef->argumentList().allHidden())
       {
         QCString paramDocs;
         for (const Argument &a : m_memberDef->argumentList())
         {
-          if (a.hasDocumentation())
+          if (a.hasDocumentation() && !a.isHidden())
           {
             QCString docs = a.docs;
             QCString direction = extractDirection(docs);
@@ -4041,6 +4041,27 @@ class MemberContext::Private : public DefinitionContext<MemberContext::Private>
         return TemplateVariant(parseDoc(m_memberDef,
                                         m_memberDef->docFile(),m_memberDef->docLine(),
                                         relPathAsString(),paramDocs,FALSE));
+      }
+      return TemplateVariant("");
+    }
+    TemplateVariant createTemplateArgumentDocs() const
+    {
+      if (m_memberDef->templateArguments() && !m_memberDef->templateArguments()->hasTemplateDocumentation())
+      {
+        QCString templateArgumentDocs;
+        // convert the parameter documentation into a list of @tparam commands
+        for (const auto a : templateArguments())
+        {
+          if (a.hasTemplateDocumentation() && !a.isHidden())
+          {
+            QCString docs = a.docs;
+            QCString direction = extractDirection(docs);
+            templateArgumentDocs+="@tparam"+direction+" "+getTemplateArgumentName(a.type, a.name)+" "+docs;
+          }
+        }
+        return TemplateVariant(parseDoc(m_memberDef,
+                                       m_memberDef->docFile(),m_memberDef->docLine(),
+                                       relPathAsString(),templateArgumentDocs,FALSE));
       }
       return TemplateVariant("");
     }
@@ -4247,6 +4268,7 @@ class MemberContext::Private : public DefinitionContext<MemberContext::Private>
       CachedItem<TemplateVariant,  Private, &Private::createClassDef>           classDef;
       CachedItem<TemplateVariant,  Private, &Private::createAnonymousType>      anonymousType;
       CachedItem<TemplateVariant,  Private, &Private::createParamDocs>          paramDocs;
+      CachedItem<TemplateVariant,  Private, &Private::createTemplateArgumentDocs> templateArgumentDocs;
       CachedItem<TemplateVariant,  Private, &Private::createImplements>         implements;
       CachedItem<TemplateVariant,  Private, &Private::createReimplements>       reimplements;
       CachedItem<TemplateVariant,  Private, &Private::createImplementedBy>      implementedBy;
@@ -4399,7 +4421,9 @@ const PropertyMap<MemberContext::Private> MemberContext::Private::s_inst {
   {  "type",                &Private::type },
   {  "detailsVisibleFor",   &Private::detailsVisibleFor },
   {  "nameWithContextFor",  &Private::nameWithContextFor }
+  {  "templateArgumentDocs",  &Private::templateArgumentDocs }
 };
+
 //%% }
 
 //PropertyMapper<MemberContext::Private> MemberContext::Private::s_inst;

@@ -297,11 +297,11 @@ void DotGraph::writeGraphHeader(TextStream &t,const QCString &title)
     t << "  bgcolor=\"transparent\";\n";
   }
   t << "  edge [fontname=\"" << fontName << "\","
-         "fontsize=\"" << fontSize << "\","
+         "fontsize=\"" << fontSize << "px\","
          "labelfontname=\"" << fontName << "\","
-         "labelfontsize=\"" << fontSize << "\"];\n";
+         "labelfontsize=\"" << fontSize << "px\"];\n";
   t << "  node [fontname=\"" << fontName << "\","
-         "fontsize=\"" << fontSize << "\",shape=record];\n";
+         "fontsize=\"" << fontSize << "px\",shape=record];\n";
 }
 
 void DotGraph::writeGraphFooter(TextStream &t)

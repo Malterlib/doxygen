@@ -1932,7 +1932,7 @@ void LatexGenerator::endParameterList()
 {
 }
 
-void LatexGenerator::startParameterType(bool first,const QCString &key)
+void LatexGenerator::startParameterType(bool first,const QCString &key,bool)
 {
   m_t << "\\item[{";
   if (!first && !key.isEmpty()) docify(key);
@@ -1948,7 +1948,7 @@ void LatexGenerator::startParameterName(bool /*oneArgOnly*/)
   m_t << "{";
 }
 
-void LatexGenerator::endParameterName(bool last,bool /*emptyList*/,bool closeBracket)
+void LatexGenerator::endParameterName(bool last,bool /*emptyList*/,bool closeBracket,bool doLineBreak)
 {
   m_t << " }";
   if (last)

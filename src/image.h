@@ -45,6 +45,7 @@ class Image
     uint width() const { return m_width; }
     uint height() const { return m_height; }
     static uint stringLength(const QCString &s);
+    static double getColoredLumiance(int level,int invert,int gamma);
 
   private:
     uint m_width;
@@ -58,7 +59,7 @@ class ColoredImage
   public:
     ColoredImage(uint width,uint height,
            const uchar *greyLevels,const uchar *alphaLevels,
-           int saturation,int hue,int gamma);
+           int saturation,int hue,int gamma, int invert);
    ~ColoredImage();
     bool save(const QCString &fileName);
     static void hsl2rgb(double h,double s,double l,

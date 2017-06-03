@@ -550,7 +550,13 @@ void HtmlDocVisitor::visit(DocVerbatim *s)
   {
     case DocVerbatim::Code:
       forceEndParagraph(s);
-      m_ci.startCodeFragment("DoxyCode");
+      m_t << "<div class=\"fragment";
+      if (!s->className().isEmpty())
+      {
+          m_t << " ";
+          m_t << s->className();
+      }
+      m_t << "\">";
       getCodeParser(lang).parseCode(m_ci,
                                         s->context(),
                                         s->text(),

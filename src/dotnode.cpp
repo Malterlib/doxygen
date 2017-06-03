@@ -520,7 +520,7 @@ void DotNode::writeArrow(TextStream &t,
 
   if (pointBack && !umlUseArrow) t << "dir=\"back\",";
   t << "color=\"" << eProps->edgeColorMap[ei->color()]
-    << "\",fontsize=\"" << Config_getInt(DOT_FONTSIZE) << "\",";
+    << "\",fontsize=\"" << Config_getInt(DOT_FONTSIZE) << "px\",";
   t << "style=\"" << eProps->edgeStyleMap[ei->style()] << "\"";
   if (!ei->label().isEmpty())
   {

@@ -33,6 +33,16 @@ struct Argument
     return !name.isEmpty() && !docs.isEmpty();
   }
 
+  bool hasTemplateDocumentation() const 
+  { 
+    return !docs.isEmpty(); 
+  }
+  
+  bool isHidden() const
+  {
+    return hide;
+  }
+  
   QCString attrib;   /*!< Argument's attribute (IDL only) */
   QCString type;     /*!< Argument's type */
   QCString canType;  /*!< Cached value of canonical type (after type resolution). Empty initially. */
@@ -41,6 +51,7 @@ struct Argument
   QCString defval;   /*!< Argument's default value (may be empty) */
   QCString docs;     /*!< Argument's documentation (may be empty) */
   QCString typeConstraint;  /*!< Used for Java generics: \<T extends C\> */
+  bool hide = false;
 };
 
 enum RefQualifierType
@@ -65,6 +76,10 @@ class ArgumentList
 
     /*! Does any argument of this list have documentation? */
     bool hasDocumentation() const;
+    /*! Does any argument of this list have template documentation? */
+    bool hasTemplateDocumentation() const;
+    /*! Are all parameters hidden*/
+    bool allHidden() const;
     /*! Does this list have zero or more parameters */
     bool hasParameters() const
     {

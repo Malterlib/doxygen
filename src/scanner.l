@@ -270,11 +270,11 @@ OPERATOR  "operator"{B}*({ARITHOP}|{ASSIGNOP}|{LOGICOP}|{BITOP})
 
   /* no comment start / end signs inside square brackets */
 NCOMM [^/\*]
-  // C start comment 
+  // C start comment
 CCS   "/\*"
   // C end comment
 CCE   "*\/"
-  // Cpp comment 
+  // Cpp comment
 CPPC  "/\/"
   // doxygen C start comment
 DCOMMC ("/\*!"|"/\**")
@@ -3922,7 +3922,7 @@ NONLopt [^\n]*
                                           {
                                             yyextra->current->endBodyLine = yyextra->yyLineNr;
                                             std::shared_ptr<Entry> original_root = yyextra->current_root; // save root this namespace is in
-                                            if (yyextra->current->section == Entry::NAMESPACE_SEC && yyextra->current->type == "namespace")
+                                           /* if (yyextra->current->section == Entry::NAMESPACE_SEC && yyextra->current->type == "namespace")
                                             {
                                               int split_point;
                                               // save documentation values
@@ -3958,7 +3958,7 @@ NONLopt [^\n]*
                                               yyextra->current->brief     = brief;
                                               yyextra->current->briefLine = briefLine;
                                               yyextra->current->briefFile = briefFile;
-                                            }
+                                            }*/
                                             QCString &cn = yyextra->current->name;
                                             QCString rn = yyextra->current_root->name;
                                             //printf("cn='%s' rn='%s' yyextra->isTypedef=%d\n",qPrint(cn),qPrint(rn),yyextra->isTypedef);
@@ -7484,6 +7484,7 @@ static void handleParametersCommentBlocks(yyscan_t yyscanner,ArgumentList &al)
 
       yyextra->current->doc.resize(0);
       yyextra->current->brief.resize(0);
+      yyextra->current->hideArgument = false;
 
       //printf("handleParametersCommentBlock [%s]\n",qPrint(doc));
       while (yyextra->commentScanner.parseCommentBlock(
@@ -7510,6 +7511,8 @@ static void handleParametersCommentBlocks(yyscan_t yyscanner,ArgumentList &al)
         newEntry(yyscanner);
       }
       a.docs = yyextra->current->doc;
+      if (yyextra->current->hideArgument)
+        a.hide = TRUE;
 
       // restore context
       yyextra->current->doc       = orgDoc;

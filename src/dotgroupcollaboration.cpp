@@ -333,8 +333,8 @@ void DotGroupCollaboration::writeGraphHeader(TextStream &t,const QCString &title
   {
     t << "  bgcolor=\"transparent\";\n";
   }
-  t << "  edge [fontname=\"" << fontName << "\",fontsize=\"" << fontSize << "\","
-    "labelfontname=\"" << fontName << "\",labelfontsize=\"" << fontSize << "\"];\n";
-  t << "  node [fontname=\"" << fontName << "\",fontsize=\"" << fontSize << "\",shape=box];\n";
+  t << "  edge [fontname=\"" << fontName << "\",fontsize=\"" << fontSize << "px\","
+    "labelfontname=\"" << fontName << "\",labelfontsize=\"" << fontSize << "px\"];\n";
+  t << "  node [fontname=\"" << fontName << "\",fontsize=\"" << fontSize << "px\",shape=box];\n";
   t << "  rankdir=LR;\n";
 }

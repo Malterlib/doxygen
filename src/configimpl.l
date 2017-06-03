@@ -1998,6 +1998,15 @@ void Config::checkAndCorrect(bool quiet, const bool check)
     adjustBoolSetting(depOption,"ENABLE_PREPROCESSING", false);
     adjustBoolSetting(depOption,"EXTRACT_PACKAGE",      true );
   }
+  int &inversion = ConfigImpl_getInt("HTML_COLORSTYLE_INVERT");
+  if (inversion<0)
+  {
+    inversion=0;
+  }
+  else if (inversion>255)
+  {
+    inversion=255;
+  }
 
   if (!checkFileName(Config_getString(GENERATE_TAGFILE),"GENERATE_TAGFILE"))
   {

@@ -2081,10 +2081,10 @@ DocAnchor::DocAnchor(DocParser &parser,DocNode *parent,const QCString &id,bool n
 
 DocVerbatim::DocVerbatim(DocParser &parser,DocNode *parent,const QCString &context,
     const QCString &text, Type t,bool isExample,
-    const QCString &exampleFile,bool isBlock,const QCString &lang)
+    const QCString &exampleFile,bool isBlock,const QCString &lang,const QCString &className)
   : DocNode(parser), m_context(context), m_text(text), m_type(t),
     m_isExample(isExample), m_exampleFile(exampleFile),
-    m_relPath(parser.context.relPath), m_lang(lang), m_isBlock(isBlock)
+    m_relPath(parser.context.relPath), m_lang(lang), m_isBlock(isBlock), m_className(className)
 {
   m_parent = parent;
 }
@@ -5355,6 +5355,13 @@ int DocPara::handleStartCode()
 {
   int retval = m_parser.tokenizer.lex();
   QCString lang = m_parser.context.token->name;
+  QCString className;
+  int foundClass = lang.find("+");
+  if (foundClass >= 0)
+  {
+    className = lang.mid(foundClass + 1);
+    lang = lang.left(foundClass);
+  }
   if (!lang.isEmpty() && lang.at(0)!='.')
   {
     lang="."+lang;
@@ -5370,7 +5377,7 @@ int DocPara::handleStartCode()
     if (m_parser.context.token->verb.at(i)=='\n') li=i+1;
     i++;
   }
-  m_children.push_back(std::make_unique<DocVerbatim>(m_parser,this,m_parser.context.context,stripIndentation(m_parser.context.token->verb.mid(li)),DocVerbatim::Code,m_parser.context.isExample,m_parser.context.exampleName,FALSE,lang));
+  m_children.push_back(std::make_unique<DocVerbatim>(m_parser,this,m_parser.context.context,stripIndentation(m_parser.context.token->verb.mid(li)),DocVerbatim::Code,m_parser.context.isExample,m_parser.context.exampleName,FALSE,lang,className));
   if (retval==0) warn_doc_error(m_parser.context.fileName,m_parser.tokenizer.getLineNr(),"code section ended without end marker");
   m_parser.tokenizer.setStatePara();
   return retval;

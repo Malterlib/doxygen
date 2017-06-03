@@ -115,6 +115,7 @@ static bool handleIngroup(yyscan_t yyscanner,const QCString &, const StringVecto
 static bool handleNoSubGrouping(yyscan_t yyscanner,const QCString &, const StringVector &);
 static bool handleShowInitializer(yyscan_t yyscanner,const QCString &, const StringVector &);
 static bool handleHideInitializer(yyscan_t yyscanner,const QCString &, const StringVector &);
+static bool handleHideArgument(yyscan_t yyscanner,const QCString &, const StringVector &);
 static bool handleCallgraph(yyscan_t yyscanner,const QCString &, const StringVector &);
 static bool handleHideCallgraph(yyscan_t yyscanner,const QCString &, const StringVector &);
 static bool handleCallergraph(yyscan_t yyscanner,const QCString &, const StringVector &);
@@ -212,6 +213,7 @@ static const std::map< std::string, DocCmdMap > docCmdMap =
   { "hidecallergraph", { &handleHideCallergraph,  CommandSpacing::Invisible }},
   { "hidecallgraph",   { &handleHideCallgraph,    CommandSpacing::Invisible }},
   { "hideinitializer", { &handleHideInitializer,  CommandSpacing::Invisible }},
+  { "hidden",          { &handleHideArgument,     CommandSpacing::Invisible }},
   { "hiderefby",       { &handleHideReferencedByRelation, CommandSpacing::Invisible }},
   { "hiderefs",        { &handleHideReferencesRelation,   CommandSpacing::Invisible }},
   { "htmlinclude",     { 0,                       CommandSpacing::Inline    }},
@@ -509,11 +511,11 @@ TMPLSPEC  "<"{BN}*[^>]+{BN}*">"
 MAILADDR  ("mailto:")?[a-z_A-Z0-9\x80-\xff.+-]+"@"[a-z_A-Z0-9\x80-\xff-]+("."[a-z_A-Z0-9\x80-\xff\-]+)+[a-z_A-Z0-9\x80-\xff\-]+
 RCSTAG    "$"{ID}":"[^\n$]+"$"
 
-  // C start comment 
+  // C start comment
 CCS   "/\*"
   // C end comment
 CCE   "*\/"
-  // Cpp comment 
+  // Cpp comment
 CPPC  "/\/"
 
   // end of section title with asterisk
@@ -2654,6 +2656,13 @@ static bool handleHideInitializer(yyscan_t yyscanner,const QCString &, const Str
 {
   struct yyguts_t *yyg = (struct yyguts_t*)yyscanner;
   yyextra->current->initLines = 0; // OFF
+  return FALSE;
+}
+
+static bool handleHideArgument(yyscan_t yyscanner,const QCString &, const StringVector &)
+{
+  struct yyguts_t *yyg = (struct yyguts_t*)yyscanner;
+  yyextra->current->hideArgument = TRUE; // ON
   return FALSE;
 }
 
