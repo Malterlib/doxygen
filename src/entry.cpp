@@ -72,6 +72,7 @@ Entry::Entry(const Entry &e)
   mtype       = e.mtype;
   spec        = e.spec;
   initLines   = e.initLines;
+  hideArgument = e.hideArgument;
   stat        = e.stat;
   localToc    = e.localToc;
   explicitExternal = e.explicitExternal;
@@ -247,6 +248,7 @@ void Entry::reset()
   fileName.resize(0);
   initializer.resize(0);
   initLines = -1;
+  hideArgument = false;
   startLine = 1;
   startColumn = 1;
   bodyLine = -1;

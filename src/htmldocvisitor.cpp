@@ -474,7 +474,13 @@ void HtmlDocVisitor::visit(DocVerbatim *s)
   {
     case DocVerbatim::Code: 
       forceEndParagraph(s);
-      m_t << PREFRAG_START;
+      m_t << "<div class=\"fragment";
+      if (!s->className().isEmpty())
+      {
+          m_t << " ";
+          m_t << s->className();
+      }
+      m_t << "\">";
       Doxygen::parserManager->getParser(lang)
                             ->parseCode(m_ci,
                                         s->context(),

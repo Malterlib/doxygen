@@ -28,7 +28,10 @@ class StorageIntf;
 struct Argument
 {
   /*! Construct a new argument. */
-  Argument() {}
+  Argument()
+    : hide(false)
+  {
+  }
   /*! Copy an argument (does a deep copy of all strings). */
   Argument(const Argument &a)
   {
@@ -39,6 +42,7 @@ struct Argument
     defval=a.defval;
     docs=a.docs;
     typeConstraint=a.typeConstraint;
+    hide=a.hide;
   }
   /*! Assignment of an argument (does a deep copy of all strings). */
   Argument &operator=(const Argument &a)
@@ -52,6 +56,7 @@ struct Argument
       defval=a.defval;
       docs=a.docs;
       typeConstraint=a.typeConstraint;
+      hide=a.hide;
     }
     return *this;
   }
@@ -63,6 +68,16 @@ struct Argument
     return !name.isEmpty() && !docs.isEmpty();
   }
 
+  bool hasTemplateDocumentation() const 
+  { 
+    return !docs.isEmpty(); 
+  }
+  
+  bool isHidden() const
+  {
+    return hide;
+  }
+  
   QCString attrib;   /*!< Argument's attribute (IDL only) */
   QCString type;     /*!< Argument's type */
   QCString canType;  /*!< Cached value of canonical type (after type resolution). Empty initially. */
@@ -71,6 +86,7 @@ struct Argument
   QCString defval;   /*!< Argument's default value (may be empty) */
   QCString docs;     /*!< Argument's documentation (may be empty) */
   QCString typeConstraint;  /*!< Used for Java generics: \<T extends C\> */
+  bool hide;
 };
 
 enum RefQualifierType
@@ -103,6 +119,10 @@ class ArgumentList : public QList<Argument>
     ArgumentList *deepCopy() const;
     /*! Does any argument of this list have documentation? */
     bool hasDocumentation() const;
+    /*! Does any argument of this list have template documentation? */
+    bool hasTemplateDocumentation() const;
+    /*! Are all parameters hidden*/
+    bool allHidden() const;
     /*! Does the member modify the state of the class? default: FALSE. */
     bool constSpecifier;
     /*! Is the member volatile? default: FALSE. */

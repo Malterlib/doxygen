@@ -7,14 +7,39 @@
  */
 bool ArgumentList::hasDocumentation() const
 {
+  ArgumentListIterator ali(*this);
+  Argument *a;
+  for (ali.toFirst();(a=ali.current());++ali)
+  {
+    if (a->hasDocumentation())
+      return true;
+  }
+  return false;
+}
+
+bool ArgumentList::hasTemplateDocumentation() const
+{
+  ArgumentListIterator ali(*this);
+  Argument *a;
+  for (ali.toFirst();(a=ali.current());++ali)
+  {
+    if (a->hasTemplateDocumentation())
+      return true;
+  }
+  return false;
+}
+
+bool ArgumentList::allHidden() const
+{
   bool hasDocs=FALSE;
   ArgumentListIterator ali(*this);
   Argument *a;
-  for (ali.toFirst();!hasDocs && (a=ali.current());++ali)
+  for (ali.toFirst();(a=ali.current());++ali)
   {
-    hasDocs = a->hasDocumentation(); 
+    if (!a->isHidden())
+      return false;
   }
-  return hasDocs;
+  return true;
 }
 
 ArgumentList *ArgumentList::deepCopy() const
@@ -57,6 +82,7 @@ ArgumentList *ArgumentList::unmarshal(StorageIntf *s)
     a->defval  = unmarshalQCString(s);
     a->docs    = unmarshalQCString(s);
     a->typeConstraint = unmarshalQCString(s);
+    a->hide    = unmarshalBool(s);
     result->append(a);
   }
   result->constSpecifier     = unmarshalBool(s);
@@ -91,6 +117,7 @@ void ArgumentList::marshal(StorageIntf *s,ArgumentList *argList)
         marshalQCString(s,a->defval);
         marshalQCString(s,a->docs);
         marshalQCString(s,a->typeConstraint);
+        marshalBool(s,a->hide);
       }
     }
     marshalBool(s,argList->constSpecifier);

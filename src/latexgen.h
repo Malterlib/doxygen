@@ -194,7 +194,7 @@ class LatexGenerator : public OutputGenerator
     void startMemberGroup();
     void endMemberGroup(bool);
     
-    void insertMemberAlign(bool) {}
+    void insertMemberAlign(bool,char) {}
     void insertMemberAlignLeft(int,bool){}
 
     void writeRuler() { t << endl << endl; }
@@ -291,10 +291,10 @@ class LatexGenerator : public OutputGenerator
     void endMemberDocPrefixItem() { t << "\\\\" << endl; }
     void startMemberDocName(bool) {}
     void endMemberDocName() {}
-    void startParameterType(bool,const char *);
+    void startParameterType(bool,const char *,bool);
     void endParameterType();
     void startParameterName(bool);
-    void endParameterName(bool,bool,bool);
+    void endParameterName(bool,bool,bool,bool);
     void startParameterList(bool);
     void endParameterList();
     void exceptionEntry(const char*,bool);

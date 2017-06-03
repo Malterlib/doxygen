@@ -235,8 +235,8 @@ class OutputList : public OutputDocInterface
     { forall(&OutputGenerator::startMemberGroup); }
     void endMemberGroup(bool last)
     { forall(&OutputGenerator::endMemberGroup,last); }
-    void insertMemberAlign(bool templ=FALSE) 
-    { forall(&OutputGenerator::insertMemberAlign,templ); }
+    void insertMemberAlign(bool templ=FALSE,char lastChar=0) 
+    { forall(&OutputGenerator::insertMemberAlign,templ,lastChar); }
     void insertMemberAlignLeft(int typ=0, bool templ=FALSE) 
     { forall(&OutputGenerator::insertMemberAlignLeft,typ,templ); }
     void writeRuler() 
@@ -415,6 +415,10 @@ class OutputList : public OutputDocInterface
     { forall(&OutputGenerator::startTextBlock,dense); }
     void endTextBlock(bool paraBreak=FALSE)
     { forall(&OutputGenerator::endTextBlock,paraBreak); }
+    void startSourceDef()
+    { forall(&OutputGenerator::startSourceDef); }
+    void endSourceDef()
+    { forall(&OutputGenerator::endSourceDef); }
     void lastIndexPage()
     { forall(&OutputGenerator::lastIndexPage); }
     void startMemberDocPrefixItem()
@@ -425,14 +429,14 @@ class OutputList : public OutputDocInterface
     { forall(&OutputGenerator::startMemberDocName,align); }
     void endMemberDocName()
     { forall(&OutputGenerator::endMemberDocName); }
-    void startParameterType(bool first,const char *key)
-    { forall(&OutputGenerator::startParameterType,first,key); }
+    void startParameterType(bool first,const char *key,bool doLineBreak)
+    { forall(&OutputGenerator::startParameterType,first,key,doLineBreak); }
     void endParameterType()
     { forall(&OutputGenerator::endParameterType); }
     void startParameterName(bool one)
     { forall(&OutputGenerator::startParameterName,one); }
-    void endParameterName(bool last,bool one,bool bracket)
-    { forall(&OutputGenerator::endParameterName,last,one,bracket); }
+    void endParameterName(bool last,bool one,bool bracket,bool doLineBreak)
+    { forall(&OutputGenerator::endParameterName,last,one,bracket,doLineBreak); }
     void startParameterList(bool openBracket)
     { forall(&OutputGenerator::startParameterList,openBracket); }
     void endParameterList()
@@ -534,14 +538,14 @@ class OutputList : public OutputDocInterface
     FORALLPROTO2(const char *,bool);
     FORALLPROTO4(const char *,const char *,const char *,int);
 #endif
+    FORALLPROTO2(bool,char);
     FORALLPROTO2(int,bool);
-    FORALLPROTO2(bool,const char *);
     FORALLPROTO2(ParamListTypes,const char *);
     FORALLPROTO2(const char *,const char *);
     FORALLPROTO2(const char *,int);
     FORALLPROTO2(const char *,SectionInfo::SectionType);
+    FORALLPROTO3(bool,const char *,bool);
     FORALLPROTO3(bool,HighlightedItem,const char *);
-    FORALLPROTO3(bool,bool,bool);
     FORALLPROTO3(const char *,const char *,bool);
     FORALLPROTO3(const char *,int,const char *);
     FORALLPROTO3(const char *,const char *,SectionInfo::SectionType);
@@ -549,6 +553,7 @@ class OutputList : public OutputDocInterface
     FORALLPROTO3(const char *,const char *,const char *);
     FORALLPROTO3(const ClassDiagram &,const char *,const char *);
     FORALLPROTO3(Definition*,const char *,bool);
+    FORALLPROTO4(bool,bool,bool,bool);
     FORALLPROTO4(SectionTypes,const char *,const char *,const char *);
     FORALLPROTO4(const char *,const char *,const char *,const char *);
     FORALLPROTO4(const char *,const char *,const char *,bool);

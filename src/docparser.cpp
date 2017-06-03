@@ -1983,10 +1983,12 @@ DocAnchor::DocAnchor(DocNode *parent,const QCString &id,bool newAnchor)
 
 DocVerbatim::DocVerbatim(DocNode *parent,const QCString &context,
     const QCString &text, Type t,bool isExample,
-    const QCString &exampleFile,bool isBlock,const QCString &lang)
+    const QCString &exampleFile,bool isBlock,const QCString &lang,
+    const QCString &className)
   : m_context(context), m_text(text), m_type(t),
     m_isExample(isExample), m_exampleFile(exampleFile),
-    m_relPath(g_relPath), m_lang(lang), m_isBlock(isBlock)
+    m_relPath(g_relPath), m_lang(lang), m_isBlock(isBlock),
+    m_className(className)
 {
   m_parent = parent;
 }
@@ -5391,6 +5393,13 @@ int DocPara::handleStartCode()
 {
   int retval = doctokenizerYYlex();
   QCString lang = g_token->name;
+  QCString className;
+  int foundClass = lang.find("+");
+  if (foundClass >= 0)
+  {
+    className = lang.mid(foundClass + 1);
+    lang = lang.left(foundClass);
+  }
   if (!lang.isEmpty() && lang.at(0)!='.')
   {
     lang="."+lang;
@@ -5406,7 +5415,7 @@ int DocPara::handleStartCode()
     if (g_token->verb.at(i)=='\n') li=i+1;
     i++;
   }
-  m_children.append(new DocVerbatim(this,g_context,stripIndentation(g_token->verb.mid(li)),DocVerbatim::Code,g_isExample,g_exampleName,FALSE,lang));
+  m_children.append(new DocVerbatim(this,g_context,stripIndentation(g_token->verb.mid(li)),DocVerbatim::Code,g_isExample,g_exampleName,FALSE,lang,className));
   if (retval==0) warn_doc_error(g_fileName,doctokenizerYYlineno,"code section ended without end marker");
   doctokenizerYYsetStatePara();
   return retval;

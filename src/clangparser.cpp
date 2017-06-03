@@ -159,14 +159,16 @@ void ClangParser::determineInputFilesInSameTu(QStrList &files)
 
 void ClangParser::start(const char *fileName,QStrList &filesInTranslationUnit)
 {
+  bool indirectInclude = true;
   static bool clangAssistedParsing = Config_getBool(CLANG_ASSISTED_PARSING);
   static QStrList &includePath = Config_getList(INCLUDE_PATH);
   static QStrList clangOptions = Config_getList(CLANG_OPTIONS);
   static QCString clangCompileDatabase = Config_getString(CLANG_DATABASE_PATH);
   if (!clangAssistedParsing) return;
   //printf("ClangParser::start(%s)\n",fileName);
+  bool bUseInternalDiagnostics = true;
   p->fileName = fileName;
-  p->index    = clang_createIndex(0, 0);
+  p->index    = clang_createIndex(0, bUseInternalDiagnostics);
   p->curLine  = 1;
   p->curToken = 0;
   QDictIterator<void> di(Doxygen::inputPaths);
@@ -271,21 +273,48 @@ void ClangParser::start(const char *fileName,QStrList &filesInTranslationUnit)
 
     // provide the input and and its dependencies as unsaved files so we can
     // pass the filtered versions
-    argv[argc++]=qstrdup(fileName);
+    if (indirectInclude)
+      argv[argc++]=qstrdup("/tmp/ParseTemp.cpp");
+    else
+      argv[argc++]=qstrdup(fileName);
+  
   }
   static bool filterSourceFiles = Config_getBool(FILTER_SOURCE_FILES);
+  bool alwaysUseUnsaved = true;
   //printf("source %s ----------\n%s\n-------------\n\n",
   //    fileName,p->source.data());
   uint numUnsavedFiles = filesInTranslationUnit.count()+1;
+  if (filterSourceFiles || alwaysUseUnsaved)
+    numUnsavedFiles += 1;
   p->numFiles = numUnsavedFiles;
   p->sources = new QCString[numUnsavedFiles];
   p->ufs     = new CXUnsavedFile[numUnsavedFiles];
-  p->sources[0]      = detab(fileToString(fileName,filterSourceFiles,TRUE));
-  p->ufs[0].Filename = qstrdup(fileName);
-  p->ufs[0].Contents = p->sources[0].data();
-  p->ufs[0].Length   = p->sources[0].length();
+
+  uint i=0;
+  uint iMainFile = 0;
+  
+  if (indirectInclude)
+  {
+    p->sources[i]      = "#include <";
+    p->sources[i]      += fileName;
+    p->sources[i]      += ">\n";
+    p->ufs[i].Filename = strdup("/tmp/ParseTemp.cpp");
+    p->ufs[i].Contents = p->sources[i].data();
+    p->ufs[i].Length   = p->sources[i].length();
+    i += 1;
+  }
+
+  if (filterSourceFiles || alwaysUseUnsaved)
+  {
+    iMainFile = i;
+    p->sources[i]      = detab(fileToString(fileName,filterSourceFiles,TRUE));
+    p->ufs[i].Filename = qstrdup(fileName);
+    p->ufs[i].Contents = p->sources[i].data();
+    p->ufs[i].Length   = p->sources[i].length();
+    i += 1;
+  }
+  
   QStrListIterator it(filesInTranslationUnit);
-  uint i=1;
   for (it.toFirst();it.current() && i<numUnsavedFiles;++it,i++)
   {
     p->fileMapping.insert(it.current(),new uint(i));
@@ -295,10 +324,7 @@ void ClangParser::start(const char *fileName,QStrList &filesInTranslationUnit)
     p->ufs[i].Length   = p->sources[i].length();
   }
 
-  // let libclang do the actual parsing
-  p->tu = clang_parseTranslationUnit(p->index, 0,
-                                     argv, argc, p->ufs, numUnsavedFiles, 
-                                     CXTranslationUnit_DetailedPreprocessingRecord);
+  CXErrorCode Result = clang_parseTranslationUnit2(p->index, 0, argv, argc,p->ufs, numUnsavedFiles, CXTranslationUnit_DetailedPreprocessingRecord, &p->tu); 
   // free arguments
   for (int i=0;i<argc;++i)
   {
@@ -310,23 +336,25 @@ void ClangParser::start(const char *fileName,QStrList &filesInTranslationUnit)
   {
     // filter out any includes not found by the clang parser
     determineInputFilesInSameTu(filesInTranslationUnit);
-
-    // show any warnings that the compiler produced
-    for (uint i=0, n=clang_getNumDiagnostics(p->tu); i!=n; ++i) 
+    if (!bUseInternalDiagnostics)
     {
-      CXDiagnostic diag = clang_getDiagnostic(p->tu, i); 
-      CXString string = clang_formatDiagnostic(diag,
-          clang_defaultDiagnosticDisplayOptions()); 
-      err("%s [clang]\n",clang_getCString(string));
-      clang_disposeString(string);
-      clang_disposeDiagnostic(diag);
+      // show any warnings that the compiler produced
+      for (uint i=0, n=clang_getNumDiagnostics(p->tu); i!=n; ++i) 
+      {
+        CXDiagnostic diag = clang_getDiagnostic(p->tu, i); 
+        CXString string = clang_formatDiagnostic(diag,
+            clang_defaultDiagnosticDisplayOptions()); 
+        err("%s [clang]\n",clang_getCString(string));
+        clang_disposeString(string);
+        clang_disposeDiagnostic(diag);
+      }
     }
 
     // create a source range for the given file
     QFileInfo fi(fileName);
     CXFile f = clang_getFile(p->tu, fileName);
     CXSourceLocation fileBegin = clang_getLocationForOffset(p->tu, f, 0);
-    CXSourceLocation fileEnd   = clang_getLocationForOffset(p->tu, f, p->ufs[0].Length);
+    CXSourceLocation fileEnd   = clang_getLocationForOffset(p->tu, f, p->ufs[iMainFile].Length);
     CXSourceRange    fileRange = clang_getRange(fileBegin, fileEnd);
 
     // produce a token stream for the file
@@ -341,7 +369,24 @@ void ClangParser::start(const char *fileName,QStrList &filesInTranslationUnit)
     p->tokens    = 0;
     p->numTokens = 0;
     p->cursors   = 0;
-    err("clang: Failed to parse translation unit %s\n",fileName);
+    switch (Result)
+    {
+    case CXError_Success:
+      err("clang: Failed to parse ('CXError_Success') translation unit %s\n",fileName);
+      break;
+    case CXError_Failure:
+      err("clang: Failed to parse ('CXError_Failure') translation unit %s\n",fileName);
+      break;
+    case CXError_Crashed:
+      err("clang: Failed to parse ('CXError_Crashed') translation unit %s\n",fileName);
+      break;
+    case CXError_InvalidArguments:
+      err("clang: Failed to parse ('CXError_InvalidArguments') translation unit %s\n",fileName);
+      break;
+    case CXError_ASTReadError:
+      err("clang: Failed to parse ('CXError_ASTReadError') translation unit %s\n",fileName);
+      break;
+    }
   }
 }
 
@@ -876,9 +921,13 @@ void ClangParser::writeSources(CodeOutputInterface &ol,FileDef *fd)
         {
           linkInclude(ol,fd,line,column,s);
         }
-        else if (s[0]=='"' || s[0]=='\'') 
+        else if (s[0]=='"') 
         {
           codifyLines(ol,fd,s,line,column,"stringliteral");
+        }
+        else if (s[0]=='\'') 
+        {
+          codifyLines(ol,fd,s,line,column,"charliteral");
         }
         else 
         {

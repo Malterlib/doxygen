@@ -1638,7 +1638,7 @@ bool VhdlDocGen::writeFuncProcDocu(
   bool first=TRUE;
   for (;(arg=ali.current());++ali)
   {
-    ol.startParameterType(first,"");
+    ol.startParameterType(first,"",true);
     //   if (first) ol.writeChar('(');
     QCString attl=arg->defval;
     bool bGen=attl.stripPrefix("gen!");
@@ -1685,10 +1685,10 @@ bool VhdlDocGen::writeFuncProcDocu(
     else
     {
       //    ol.docify(" ) ");
-      ol.endParameterName(TRUE,FALSE,TRUE);
+      ol.endParameterName(TRUE,FALSE,TRUE,true);
       break;
     }
-    ol.endParameterName(FALSE,FALSE,FALSE);
+    ol.endParameterName(FALSE,FALSE,FALSE,true);
 
     //sem=TRUE;
     first=FALSE;
@@ -3055,17 +3055,17 @@ void VhdlDocGen::writeRecUnitDocu(
   for(uint i=0;i<len;i++)
   {
     QCString n=ql[i];
-    ol.startParameterType(first,"");
+    ol.startParameterType(first,"",true);
     ol.endParameterType();
     ol.startParameterName(TRUE);
     VhdlDocGen::formatString(n,ol,md);
     if ((len-i)>1)
     {
-      ol.endParameterName(FALSE,FALSE,FALSE);
+      ol.endParameterName(FALSE,FALSE,FALSE,true);
     }
     else
     {
-      ol.endParameterName(TRUE,FALSE,TRUE);
+      ol.endParameterName(TRUE,FALSE,TRUE,true);
     }
 
     first=FALSE;

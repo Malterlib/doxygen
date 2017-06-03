@@ -103,6 +103,7 @@ static bool handleIngroup(const QCString &, const QCStringList &);
 static bool handleNoSubGrouping(const QCString &, const QCStringList &);
 static bool handleShowInitializer(const QCString &, const QCStringList &);
 static bool handleHideInitializer(const QCString &, const QCStringList &);
+static bool handleHideArgument(const QCString &, const QCStringList &);
 static bool handleCallgraph(const QCString &, const QCStringList &);
 static bool handleHideCallgraph(const QCString &, const QCStringList &);
 static bool handleCallergraph(const QCString &, const QCStringList &);
@@ -214,6 +215,7 @@ static DocCmdMap docCmdMap[] =
   { "nosubgrouping",   &handleNoSubGrouping,    FALSE },
   { "showinitializer", &handleShowInitializer,  FALSE },
   { "hideinitializer", &handleHideInitializer,  FALSE },
+  { "hidden",          &handleHideArgument,     FALSE },
   { "callgraph",       &handleCallgraph,        FALSE },
   { "hidecallgraph",   &handleHideCallgraph,    FALSE },
   { "callergraph",     &handleCallergraph,      FALSE },
@@ -2816,6 +2818,12 @@ static bool handleShowInitializer(const QCString &, const QCStringList &)
 static bool handleHideInitializer(const QCString &, const QCStringList &)
 {
   current->initLines = 0; // OFF
+  return FALSE;
+}
+
+static bool handleHideArgument(const QCString &s, const QCStringList &)
+{
+  current->hideArgument = TRUE; // ON
   return FALSE;
 }
 

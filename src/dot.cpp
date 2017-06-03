@@ -23,6 +23,7 @@
 #include <qqueue.h>
 #include <qthread.h>
 #include <qmutex.h>
+#include <qregexp.h>
 #include <qwaitcondition.h>
 #include <qregexp.h>
 
@@ -273,11 +274,11 @@ static void writeGraphHeader(FTextStream &t,const QCString &title=QCString())
     t << "  bgcolor=\"transparent\";" << endl;
   }
   t << "  edge [fontname=\"" << FONTNAME << "\","
-       "fontsize=\"" << FONTSIZE << "\","
+       "fontsize=\"" << FONTSIZE << "px\","
        "labelfontname=\"" << FONTNAME << "\","
-       "labelfontsize=\"" << FONTSIZE << "\"];\n";
+       "labelfontsize=\"" << FONTSIZE << "px\"];\n";
   t << "  node [fontname=\"" << FONTNAME << "\","
-       "fontsize=\"" << FONTSIZE << "\",shape=record];\n";
+       "fontsize=\"" << FONTSIZE << "px\",shape=record];\n";
 }
 
 static void writeGraphFooter(FTextStream &t)
@@ -561,16 +562,16 @@ static bool writeVecGfxFigure(FTextStream &out,const QCString &baseName,
     // c*width/maxWidth > c*height/maxHeight, where c=maxWidth*maxHeight>0
     if (width*maxHeight>height*maxWidth)
     {
-      out << "\\includegraphics[width=" << maxWidth << "pt]";
+      out << "\\includegraphics[width=" << maxWidth << "px]";
     }
     else
     {
-      out << "\\includegraphics[height=" << maxHeight << "pt]";
+      out << "\\includegraphics[height=" << maxHeight << "px]";
     }
   }
   else
   {
-     out << "\\includegraphics[width=" << width << "pt]";
+     out << "\\includegraphics[width=" << width << "px]";
   }
 
   out << "{" << baseName << "}\n"
@@ -606,7 +607,7 @@ static bool readSVGSize(const QCString &fileName,int *width,int *height)
         //printf("Found zoomable for %s!\n",fileName.data());
         found=TRUE;
       }
-      else if (sscanf(buf,"<svg width=\"%dpt\" height=\"%dpt\"",width,height)==2)
+      else if (sscanf(buf,"<svg width=\"%dpx\" height=\"%dpx\"",width,height)==2)
       {
         //printf("Found fixed size %dx%d for %s!\n",*width,*height,fileName.data());
         found=TRUE;
@@ -647,7 +648,7 @@ static bool writeSVGFigureLink(FTextStream &out,const QCString &relPath,
     //out << "<object type=\"image/svg+xml\" data=\"" 
     //out << "<embed type=\"image/svg+xml\" src=\"" 
     out << "<iframe scrolling=\"no\" frameborder=\"0\" src=\"" 
-        << relPath << baseName << ".svg\" width=\"100%\" height=\"" << height << "\">";
+        << relPath << baseName << ".svg\" width=\"100%\" height=\"" << height << "px\">";
   }
   else
   {
@@ -655,8 +656,8 @@ static bool writeSVGFigureLink(FTextStream &out,const QCString &relPath,
     //out << "<embed type=\"image/svg+xml\" src=\"" 
     out << "<iframe scrolling=\"no\" frameborder=\"0\" src=\"" 
         << relPath << baseName << ".svg\" width=\"" 
-        << ((width*96+48)/72) << "\" height=\"" 
-        << ((height*96+48)/72) << "\">";
+        << width << "px\" height=\"" 
+        << height << "px\">";
   }
   writeSVGNotSupported(out);
   //out << "</object>";
@@ -1048,6 +1049,7 @@ bool DotFilePatcher::run()
           //printf("width=%d height=%d\n",width,height);
           foundSize = count==2 && (width>500 || height>450);
           if (foundSize) insideHeader=TRUE;
+          line = line.replace(QRegExp("pt\""), "px\"");
         }
         else if (insideHeader && !replacedHeader && line.find("<title>")!=-1)
         {
@@ -1070,6 +1072,11 @@ bool DotFilePatcher::run()
           insideHeader=FALSE;
           replacedHeader=TRUE;
         }
+      }
+      else if (line.find("<svg")!=-1 && !replacedHeader)
+      {
+        replacedHeader = true;
+        line = line.replace(QRegExp("pt\""), "px\"");
       }
       if (!insideHeader || !foundSize) // copy SVG and replace refs, 
                                        // unless we are inside the header of the SVG.
@@ -1932,7 +1939,7 @@ void DotNode::writeArrow(FTextStream &t,
 
   if (pointBack && !umlUseArrow) t << "dir=\"back\",";
   t << "color=\"" << eProps->edgeColorMap[ei->m_color] 
-    << "\",fontsize=\"" << FONTSIZE << "\",";
+    << "\",fontsize=\"" << FONTSIZE << "px\",";
   t << "style=\"" << eProps->edgeStyleMap[ei->m_style] << "\"";
   if (!ei->m_label.isEmpty())
   {
@@ -4174,23 +4181,23 @@ void generateGraphLegend(const char *path)
   QGString theGraph;
   FTextStream md5stream(&theGraph);
   writeGraphHeader(md5stream,theTranslator->trLegendTitle());
-  md5stream << "  Node9 [shape=\"box\",label=\"Inherited\",fontsize=\"" << FONTSIZE << "\",height=0.2,width=0.4,fontname=\"" << FONTNAME << "\",fillcolor=\"grey75\",style=\"filled\" fontcolor=\"black\"];\n";
-  md5stream << "  Node10 -> Node9 [dir=\"back\",color=\"midnightblue\",fontsize=\"" << FONTSIZE << "\",style=\"solid\",fontname=\"" << FONTNAME << "\"];\n";
-  md5stream << "  Node10 [shape=\"box\",label=\"PublicBase\",fontsize=\"" << FONTSIZE << "\",height=0.2,width=0.4,fontname=\"" << FONTNAME << "\",color=\"black\",URL=\"$classPublicBase" << Doxygen::htmlFileExtension << "\"];\n";
-  md5stream << "  Node11 -> Node10 [dir=\"back\",color=\"midnightblue\",fontsize=\"" << FONTSIZE << "\",style=\"solid\",fontname=\"" << FONTNAME << "\"];\n";
-  md5stream << "  Node11 [shape=\"box\",label=\"Truncated\",fontsize=\"" << FONTSIZE << "\",height=0.2,width=0.4,fontname=\"" << FONTNAME << "\",color=\"red\",URL=\"$classTruncated" << Doxygen::htmlFileExtension << "\"];\n";
-  md5stream << "  Node13 -> Node9 [dir=\"back\",color=\"darkgreen\",fontsize=\"" << FONTSIZE << "\",style=\"solid\",fontname=\"" << FONTNAME << "\"];\n";
-  md5stream << "  Node13 [shape=\"box\",label=\"ProtectedBase\",fontsize=\"" << FONTSIZE << "\",height=0.2,width=0.4,fontname=\"" << FONTNAME << "\",color=\"black\",URL=\"$classProtectedBase" << Doxygen::htmlFileExtension << "\"];\n";
-  md5stream << "  Node14 -> Node9 [dir=\"back\",color=\"firebrick4\",fontsize=\"" << FONTSIZE << "\",style=\"solid\",fontname=\"" << FONTNAME << "\"];\n";
-  md5stream << "  Node14 [shape=\"box\",label=\"PrivateBase\",fontsize=\"" << FONTSIZE << "\",height=0.2,width=0.4,fontname=\"" << FONTNAME << "\",color=\"black\",URL=\"$classPrivateBase" << Doxygen::htmlFileExtension << "\"];\n";
-  md5stream << "  Node15 -> Node9 [dir=\"back\",color=\"midnightblue\",fontsize=\"" << FONTSIZE << "\",style=\"solid\",fontname=\"" << FONTNAME << "\"];\n";
-  md5stream << "  Node15 [shape=\"box\",label=\"Undocumented\",fontsize=\"" << FONTSIZE << "\",height=0.2,width=0.4,fontname=\"" << FONTNAME << "\",color=\"grey75\"];\n";
-  md5stream << "  Node16 -> Node9 [dir=\"back\",color=\"midnightblue\",fontsize=\"" << FONTSIZE << "\",style=\"solid\",fontname=\"" << FONTNAME << "\"];\n";
-  md5stream << "  Node16 [shape=\"box\",label=\"Templ< int >\",fontsize=\"" << FONTSIZE << "\",height=0.2,width=0.4,fontname=\"" << FONTNAME << "\",color=\"black\",URL=\"$classTempl" << Doxygen::htmlFileExtension << "\"];\n";
-  md5stream << "  Node17 -> Node16 [dir=\"back\",color=\"orange\",fontsize=\"" << FONTSIZE << "\",style=\"dashed\",label=\"< int >\",fontname=\"" << FONTNAME << "\"];\n";
-  md5stream << "  Node17 [shape=\"box\",label=\"Templ< T >\",fontsize=\"" << FONTSIZE << "\",height=0.2,width=0.4,fontname=\"" << FONTNAME << "\",color=\"black\",URL=\"$classTempl" << Doxygen::htmlFileExtension << "\"];\n";
-  md5stream << "  Node18 -> Node9 [dir=\"back\",color=\"darkorchid3\",fontsize=\"" << FONTSIZE << "\",style=\"dashed\",label=\"m_usedClass\",fontname=\"" << FONTNAME << "\"];\n";
-  md5stream << "  Node18 [shape=\"box\",label=\"Used\",fontsize=\"" << FONTSIZE << "\",height=0.2,width=0.4,fontname=\"" << FONTNAME << "\",color=\"black\",URL=\"$classUsed" << Doxygen::htmlFileExtension << "\"];\n";
+  md5stream << "  Node9 [shape=\"box\",label=\"Inherited\",fontsize=\"" << FONTSIZE << "px\",height=0.2,width=0.4,fontname=\"" << FONTNAME << "\",fillcolor=\"grey75\",style=\"filled\" fontcolor=\"black\"];\n";
+  md5stream << "  Node10 -> Node9 [dir=\"back\",color=\"midnightblue\",fontsize=\"" << FONTSIZE << "px\",style=\"solid\",fontname=\"" << FONTNAME << "\"];\n";
+  md5stream << "  Node10 [shape=\"box\",label=\"PublicBase\",fontsize=\"" << FONTSIZE << "px\",height=0.2,width=0.4,fontname=\"" << FONTNAME << "\",color=\"black\",URL=\"$classPublicBase" << Doxygen::htmlFileExtension << "\"];\n";
+  md5stream << "  Node11 -> Node10 [dir=\"back\",color=\"midnightblue\",fontsize=\"" << FONTSIZE << "px\",style=\"solid\",fontname=\"" << FONTNAME << "\"];\n";
+  md5stream << "  Node11 [shape=\"box\",label=\"Truncated\",fontsize=\"" << FONTSIZE << "px\",height=0.2,width=0.4,fontname=\"" << FONTNAME << "\",color=\"red\",URL=\"$classTruncated" << Doxygen::htmlFileExtension << "\"];\n";
+  md5stream << "  Node13 -> Node9 [dir=\"back\",color=\"darkgreen\",fontsize=\"" << FONTSIZE << "px\",style=\"solid\",fontname=\"" << FONTNAME << "\"];\n";
+  md5stream << "  Node13 [shape=\"box\",label=\"ProtectedBase\",fontsize=\"" << FONTSIZE << "px\",height=0.2,width=0.4,fontname=\"" << FONTNAME << "\",color=\"black\",URL=\"$classProtectedBase" << Doxygen::htmlFileExtension << "\"];\n";
+  md5stream << "  Node14 -> Node9 [dir=\"back\",color=\"firebrick4\",fontsize=\"" << FONTSIZE << "px\",style=\"solid\",fontname=\"" << FONTNAME << "\"];\n";
+  md5stream << "  Node14 [shape=\"box\",label=\"PrivateBase\",fontsize=\"" << FONTSIZE << "px\",height=0.2,width=0.4,fontname=\"" << FONTNAME << "\",color=\"black\",URL=\"$classPrivateBase" << Doxygen::htmlFileExtension << "\"];\n";
+  md5stream << "  Node15 -> Node9 [dir=\"back\",color=\"midnightblue\",fontsize=\"" << FONTSIZE << "px\",style=\"solid\",fontname=\"" << FONTNAME << "\"];\n";
+  md5stream << "  Node15 [shape=\"box\",label=\"Undocumented\",fontsize=\"" << FONTSIZE << "px\",height=0.2,width=0.4,fontname=\"" << FONTNAME << "\",color=\"grey75\"];\n";
+  md5stream << "  Node16 -> Node9 [dir=\"back\",color=\"midnightblue\",fontsize=\"" << FONTSIZE << "px\",style=\"solid\",fontname=\"" << FONTNAME << "\"];\n";
+  md5stream << "  Node16 [shape=\"box\",label=\"Templ< int >\",fontsize=\"" << FONTSIZE << "px\",height=0.2,width=0.4,fontname=\"" << FONTNAME << "\",color=\"black\",URL=\"$classTempl" << Doxygen::htmlFileExtension << "\"];\n";
+  md5stream << "  Node17 -> Node16 [dir=\"back\",color=\"orange\",fontsize=\"" << FONTSIZE << "px\",style=\"dashed\",label=\"< int >\",fontname=\"" << FONTNAME << "\"];\n";
+  md5stream << "  Node17 [shape=\"box\",label=\"Templ< T >\",fontsize=\"" << FONTSIZE << "px\",height=0.2,width=0.4,fontname=\"" << FONTNAME << "\",color=\"black\",URL=\"$classTempl" << Doxygen::htmlFileExtension << "\"];\n";
+  md5stream << "  Node18 -> Node9 [dir=\"back\",color=\"darkorchid3\",fontsize=\"" << FONTSIZE << "px\",style=\"dashed\",label=\"m_usedClass\",fontname=\"" << FONTNAME << "\"];\n";
+  md5stream << "  Node18 [shape=\"box\",label=\"Used\",fontsize=\"" << FONTSIZE << "px\",height=0.2,width=0.4,fontname=\"" << FONTNAME << "\",color=\"black\",URL=\"$classUsed" << Doxygen::htmlFileExtension << "\"];\n";
   writeGraphFooter(md5stream);
   uchar md5_sig[16];
   QCString sigStr(33);
@@ -4230,6 +4237,7 @@ void generateGraphLegend(const char *path)
 
   if (imgExt=="svg")
   {
+    DotManager::instance()->addSVGConversion(absImgName,QCString(),FALSE,QCString(),TRUE,-1);
     DotManager::instance()->addSVGObject(
         absBaseName+Config_getString(HTML_FILE_EXTENSION),
         "graph_legend",
@@ -4807,9 +4815,9 @@ void DotGroupCollaboration::writeGraphHeader(FTextStream &t,
   {
     t << "  bgcolor=\"transparent\";" << endl;
   }
-  t << "  edge [fontname=\"" << FONTNAME << "\",fontsize=\"" << FONTSIZE << "\","
-    "labelfontname=\"" << FONTNAME << "\",labelfontsize=\"" << FONTSIZE << "\"];\n";
-  t << "  node [fontname=\"" << FONTNAME << "\",fontsize=\"" << FONTSIZE << "\",shape=box];\n";
+  t << "  edge [fontname=\"" << FONTNAME << "\",fontsize=\"" << FONTSIZE << "px\","
+    "labelfontname=\"" << FONTNAME << "\",labelfontsize=\"" << FONTSIZE << "px\"];\n";
+  t << "  node [fontname=\"" << FONTNAME << "\",fontsize=\"" << FONTSIZE << "px\",shape=box];\n";
   t << "  rankdir=LR;\n";
 }
 
@@ -4821,8 +4829,8 @@ void writeDotDirDepGraph(FTextStream &t,DirDef *dd,bool linkRelations)
       t << "  bgcolor=transparent;\n";
     }
     t << "  compound=true\n";
-    t << "  node [ fontsize=\"" << FONTSIZE << "\", fontname=\"" << FONTNAME << "\"];\n";
-    t << "  edge [ labelfontsize=\"" << FONTSIZE << "\", labelfontname=\"" << FONTNAME << "\"];\n";
+    t << "  node [ fontsize=\"" << FONTSIZE << "px\", fontname=\"" << FONTNAME << "\"];\n";
+    t << "  edge [ labelfontsize=\"" << FONTSIZE << "px\", labelfontname=\"" << FONTNAME << "\"];\n";
 
     QDict<DirDef> dirsInGraph(257);
     
@@ -4832,7 +4840,7 @@ void writeDotDirDepGraph(FTextStream &t,DirDef *dd,bool linkRelations)
       t << "  subgraph cluster" << dd->parent()->getOutputFileBase() << " {\n";
       t << "    graph [ bgcolor=\"#ddddee\", pencolor=\"black\", label=\"" 
         << dd->parent()->shortName() 
-        << "\" fontname=\"" << FONTNAME << "\", fontsize=\"" << FONTSIZE << "\", URL=\"";
+        << "\" fontname=\"" << FONTNAME << "\", fontsize=\"" << FONTSIZE << "px\", URL=\"";
       t << dd->parent()->getOutputFileBase() << Doxygen::htmlFileExtension;
       t << "\"]\n";
     }

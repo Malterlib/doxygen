@@ -244,6 +244,7 @@ class Entry
     MethodTypes mtype;        //!< signal, slot, (dcop) method, or property?
     uint64 spec;              //!< class/member specifiers
     int  initLines;           //!< define/variable initializer lines to show
+    bool hideArgument;
     bool stat;                //!< static ?
     bool explicitExternal;    //!< explicitly defined as external?
     bool proto;               //!< prototype ?

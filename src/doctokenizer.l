@@ -781,7 +781,7 @@ REFWORD_NOCV   {FILEMASK}|{LABELID}|{REFWORD2_NOCV}|{REFWORD3}|{REFWORD4_NOCV}
                          // start of a new paragraph
   		         return TK_NEWPARA;
                        }
-<St_CodeOpt>{BLANK}*"{"(".")?{LABELID}"}" {
+<St_CodeOpt>{BLANK}*"{"((".")?{LABELID})?("+"{LABELID})?"}" {
                          g_token->name = yytext;
                          int i=g_token->name.find('{'); /* } to keep vi happy */
                          g_token->name = g_token->name.mid(i+1,g_token->name.length()-i-2);

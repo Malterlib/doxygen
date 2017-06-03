@@ -326,9 +326,12 @@ void FileDef::writeDetailedDescription(OutputList &ol,const QCString &title)
       ol.disableAllBut(OutputGenerator::Html);
       ol.writeAnchor(0,"details"); 
     ol.popGeneratorState();
-    ol.startGroupHeader();
-    ol.parseText(title);
-    ol.endGroupHeader();
+    if (title != " ")
+    {
+      ol.startGroupHeader();
+      ol.parseText(title);
+      ol.endGroupHeader();
+    }
 
     ol.startTextBlock();
     if (!briefDescription().isEmpty() && Config_getBool(REPEAT_BRIEF))

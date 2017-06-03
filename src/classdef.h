@@ -256,7 +256,7 @@ class ClassDef : public Definition
     void getTemplateParameterLists(QList<ArgumentList> &lists) const;
 
     QCString qualifiedNameWithTemplateParameters(
-        QList<ArgumentList> *actualParams=0,int *actualParamIndex=0) const;
+        QList<ArgumentList> *actualParams=0,int *actualParamIndex=0,bool forDisplay=false) const;
 
     /** Returns TRUE if there is at least one pure virtual member in this
      *  class.

@@ -2140,7 +2140,7 @@ void LatexGenerator::endParameterList()
 {
 }
 
-void LatexGenerator::startParameterType(bool first,const char *key)
+void LatexGenerator::startParameterType(bool first,const char *key,bool)
 {
   t << "\\item[{";
   if (!first && key) docify(key);
@@ -2156,7 +2156,7 @@ void LatexGenerator::startParameterName(bool /*oneArgOnly*/)
   t << "{";
 }
 
-void LatexGenerator::endParameterName(bool last,bool /*emptyList*/,bool closeBracket)
+void LatexGenerator::endParameterName(bool last,bool /*emptyList*/,bool closeBracket,bool doLineBreak)
 {
   t << " }";
   if (last)

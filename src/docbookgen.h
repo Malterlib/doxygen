@@ -255,7 +255,7 @@ class DocbookGenerator : public OutputGenerator
     void endMemberGroupDocs(){DB_GEN_EMPTY};
     void startMemberGroup();
     void endMemberGroup(bool);
-    void insertMemberAlign(bool){DB_GEN_EMPTY};
+    void insertMemberAlign(bool,char){DB_GEN_EMPTY};
     void insertMemberAlignLeft(int,bool){DB_GEN_EMPTY};
     void startMemberDoc(const char *,const char *,
                                 const char *,const char *,int,int,bool);
@@ -309,10 +309,10 @@ class DocbookGenerator : public OutputGenerator
     void endMemberDocPrefixItem();
     void startMemberDocName(bool);
     void endMemberDocName();
-    void startParameterType(bool,const char *key){DB_GEN_EMPTY};
+    void startParameterType(bool,const char *key,bool){DB_GEN_EMPTY};
     void endParameterType(){DB_GEN_EMPTY};
     void startParameterName(bool);
-    void endParameterName(bool,bool,bool);
+    void endParameterName(bool,bool,bool,bool);
     void startParameterList(bool);
     void endParameterList();
     void exceptionEntry(const char*,bool);

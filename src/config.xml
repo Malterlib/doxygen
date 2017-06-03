@@ -966,6 +966,22 @@ Go to the <a href="commands.html">next</a> section or return to the
 ]]>
       </docs>
     </option>
+    <option type='bool' id='HIDE_TEMPLATE_SCOPE_NAMES' defval='0'>
+      <docs>
+<![CDATA[
+ If the \c HIDE_TEMPLATE_SCOPE_NAMES tag is set to \c NO then doxygen 
+ will display the full template scope when generating documentation for for members. If set to \c YES the scope will be hidden. 
+]]>
+      </docs>
+    </option>
+    <option type='bool' id='HIDE_TEMPLATE_CLASS_SCOPE_NAMES' defval='0'>
+      <docs>
+<![CDATA[
+ If the \c HIDE_TEMPLATE_CLASS_SCOPE_NAMES tag is set to \c NO then doxygen 
+ will display the full template scope for the parent class of members when generating documentation. If set to \c YES the scope will be hidden. 
+]]>
+      </docs>
+    </option>
     <option type='bool' id='SHOW_INCLUDE_FILES' defval='1'>
       <docs>
 <![CDATA[
