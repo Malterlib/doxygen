@@ -3998,6 +3998,8 @@ class MemberContext::Private : public DefinitionContext<MemberContext::Private>
         s_inst.addProperty("type",                &Private::type);
         s_inst.addProperty("detailsVisibleFor",   &Private::detailsVisibleFor);
         s_inst.addProperty("nameWithContextFor",  &Private::nameWithContextFor);
+        s_inst.addProperty("templateArgumentDocs",&Private::templateArgumentDocs);
+
         init=TRUE;
       }
       if (!md->cookie()) { md->setCookie(new MemberContext::Private::Cachable(md)); }
@@ -4679,7 +4681,7 @@ class MemberContext::Private : public DefinitionContext<MemberContext::Private>
       Cachable &cache = getCache();
       if (!cache.paramDocs)
       {
-        if (m_memberDef->argumentList() && m_memberDef->argumentList()->hasDocumentation())
+        if (m_memberDef->argumentList() && m_memberDef->argumentList()->hasDocumentation() && !m_memberDef->argumentList()->allHidden())
         {
           QCString paramDocs;
           ArgumentListIterator ali(*m_memberDef->argumentList());
@@ -4687,7 +4689,7 @@ class MemberContext::Private : public DefinitionContext<MemberContext::Private>
           // convert the parameter documentation into a list of @param commands
           for (ali.toFirst();(a=ali.current());++ali)
           {
-            if (a->hasDocumentation())
+            if (a->hasDocumentation() && !a->isHidden())
             {
               QCString direction = extractDirection(a->docs);
               paramDocs+="@param"+direction+" "+a->name+" "+a->docs;
@@ -4703,6 +4705,36 @@ class MemberContext::Private : public DefinitionContext<MemberContext::Private>
         }
       }
       return *cache.paramDocs;
+    }
+    TemplateVariant templateArgumentDocs() const
+    {
+      Cachable &cache = getCache();
+      if (!cache.templateArgumentDocs)
+      {
+        if (m_memberDef->templateArguments() && !m_memberDef->templateArguments()->hasTemplateDocumentation())
+        {
+          QCString templateArgumentDocs;
+          ArgumentListIterator ali(*m_memberDef->templateArguments());
+          Argument *a;
+          // convert the parameter documentation into a list of @tparam commands
+          for (ali.toFirst();(a=ali.current());++ali)
+          {
+            if (a->hasTemplateDocumentation() && !a->isHidden())
+            {
+              QCString direction = extractDirection(a->docs);
+              templateArgumentDocs+="@tparam"+direction+" "+getTemplateArgumentName(a->type, a->name)+" "+a->docs;
+            }
+          }
+          cache.templateArgumentDocs.reset(new TemplateVariant(parseDoc(m_memberDef,
+                                           m_memberDef->docFile(),m_memberDef->docLine(),
+                                           relPathAsString(),templateArgumentDocs,FALSE)));
+        }
+        else
+        {
+          cache.templateArgumentDocs.reset(new TemplateVariant(""));
+        }
+      }
+      return *cache.templateArgumentDocs;
     }
     TemplateVariant implements() const
     {
@@ -5088,6 +5120,7 @@ class MemberContext::Private : public DefinitionContext<MemberContext::Private>
       SharedPtr<ClassContext>        anonymousType;
       SharedPtr<TemplateList>        templateDecls;
       ScopedPtr<TemplateVariant>     paramDocs;
+      ScopedPtr<TemplateVariant>     templateArgumentDocs;
       SharedPtr<TemplateList>        implements;
       SharedPtr<TemplateList>        reimplements;
       SharedPtr<TemplateList>        implementedBy;

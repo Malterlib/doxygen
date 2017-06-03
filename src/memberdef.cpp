@@ -120,8 +120,10 @@ static QCString addTemplateNames(const QCString &s,const QCString &n,const QCStr
 
 static bool writeDefArgumentList(OutputList &ol,Definition *scope,MemberDef *md)
 {
-  ArgumentList *defArgList=(md->isDocsForDefinition()) ?
-                             md->argumentList() : md->declArgumentList();
+/*  ArgumentList *defArgList=(md->isDocsForDefinition()) ?
+                             md->argumentList() : md->declArgumentList();*/
+  ArgumentList *defArgList=md->argumentList();
+  
   //printf("writeDefArgumentList `%s' isDocsForDefinition()=%d\n",md->name().data(),md->isDocsForDefinition());
   if (defArgList==0 || md->isProperty())
   {
@@ -136,7 +138,7 @@ static bool writeDefArgumentList(OutputList &ol,Definition *scope,MemberDef *md)
     Argument *a;
     ol.endMemberDocName();
     ol.startParameterList(FALSE);
-    ol.startParameterType(TRUE,0);
+    ol.startParameterType(TRUE,0,true);
     ol.endParameterType();
     ol.startParameterName(FALSE);
     for (;(a=ali.current());++ali)
@@ -150,7 +152,7 @@ static bool writeDefArgumentList(OutputList &ol,Definition *scope,MemberDef *md)
         ol.docify("?"+a->name+"? ");
       }
     }
-    ol.endParameterName(TRUE,FALSE,FALSE);
+    ol.endParameterName(TRUE,FALSE,FALSE,true);
     return TRUE;
   }
 
@@ -193,7 +195,7 @@ static bool writeDefArgumentList(OutputList &ol,Definition *scope,MemberDef *md)
     }
     else if (scope->definitionType()==Definition::TypeClass && ((ClassDef*)scope)->templateArguments())
     {
-      cName=tempArgListToString(((ClassDef*)scope)->templateArguments(),scope->getLanguage());
+      cName=tempArgListToString(((ClassDef*)scope)->templateArguments(),scope->getLanguage(),true);
       //printf("2. cName=%s\n",cName.data());
     }
     else // no template specifier
@@ -202,17 +204,157 @@ static bool writeDefArgumentList(OutputList &ol,Definition *scope,MemberDef *md)
     }
   }
   //printf("~~~ %s cName=%s\n",md->name().data(),cName.data());
+  bool isDefine = md->isDefine();
+  
+  int nArgs = 0;
+  int charLen = 0;
+  {
+    bool first=TRUE;
+    ArgumentListIterator ali(*defArgList);
+    Argument *a=ali.current();
+    while (a)
+    {
+      if (a->isHidden())
+      {
+        ++ali;
+        a=ali.current();
+        continue;
+      }
+      ++nArgs;
+      
+      if (!first)
+      {
+        if (!isDefine)
+        {
+          QCString key;
+          if (md->isObjCMethod() && a->attrib.length()>=2)
+          {
+            //printf("Found parameter keyword %s\n",a->attrib.data());
+            // strip [ and ]
+            key=a->attrib.mid(1,a->attrib.length()-2);
+            if (key!=",") key+=":"; // for normal keywords add colon
+          }
+          charLen += key.length();
+        }
+        if (!md->isObjCMethod())
+          charLen += 2;
+      }
+      
+      QRegExp re(")("),res("(.*\\*");
+      int vp=a->type.find(re);
+      int wp=a->type.find(res);
+
+      // use the following to put the function pointer type before the name
+      bool hasFuncPtrType=FALSE;
+
+      if (!a->attrib.isEmpty() && !md->isObjCMethod()) // argument has an IDL attribute
+        charLen += a->attrib.length() + 1;
+      if (hasFuncPtrType) // argument type is a function pointer
+      {
+        //printf("a->type=`%s' a->name=`%s'\n",a->type.data(),a->name.data());
+        QCString n=a->type.left(vp);
+        if (hasFuncPtrType) n=a->type.left(wp);
+        if (md->isObjCMethod()) { n.prepend("("); n.append(")"); }
+        if (!cName.isEmpty()) n=addTemplateNames(n,scope->name(),cName);
+        charLen += n.length();
+      }
+      else // non-function pointer type
+      {
+        QCString n=a->type;
+        if (md->isObjCMethod()) { n.prepend("("); n.append(")"); }
+        if (a->type!="...")
+        {
+          if (!cName.isEmpty()) n=addTemplateNames(n,scope->name(),cName);
+          charLen += n.length();
+        }
+      }
+      if (hasFuncPtrType)
+      {
+        charLen += a->type.mid(wp,vp-wp).length();
+      }
+      if (!a->name.isEmpty() || a->type=="...") // argument has a name
+      {
+        if (a->name.isEmpty()) 
+          charLen += a->type.length();
+        else 
+          charLen += a->name.length();
+      }
+      if (!a->array.isEmpty())
+      {
+        charLen += a->array.length();
+      }
+      if (hasFuncPtrType) // write the part of the argument type
+                          // that comes after the name
+      {
+        charLen += a->type.right(a->type.length()-vp).length();
+      }
+      if (!a->defval.isEmpty()) // write the default value
+      {
+        QCString n=a->defval;
+        if (!cName.isEmpty()) n=addTemplateNames(n,scope->name(),cName);
+        charLen += n.length() + 3;
+      }
+      ++ali;
+      a=ali.current();
+      first=FALSE;
+    }
+  }
+
+  bool doLineBreak = charLen > 32;
 
   bool first=TRUE;
   bool paramTypeStarted=FALSE;
-  bool isDefine = md->isDefine();
   ArgumentListIterator ali(*defArgList);
   Argument *a=ali.current();
   while (a)
   {
+    if (a->isHidden())
+    {
+      ++ali;
+      a=ali.current();
+      continue;
+    }
+    if (!first)
+    {
+      if (!isDefine)
+      {
+        QCString key;
+        if (md->isObjCMethod() && a->attrib.length()>=2)
+        {
+          //printf("Found parameter keyword %s\n",a->attrib.data());
+          // strip [ and ]
+          key=a->attrib.mid(1,a->attrib.length()-2);
+          if (key!=",") key+=":"; // for normal keywords add colon
+        }
+        ol.endParameterName(FALSE,FALSE,!md->isObjCMethod(),doLineBreak);
+        if (paramTypeStarted)
+        {
+          ol.endParameterType();
+        }
+        ol.startParameterType(FALSE,key,doLineBreak);
+        paramTypeStarted=TRUE;
+      }
+      else // isDefine
+      {
+        ol.endParameterName(FALSE,FALSE,TRUE,doLineBreak);
+      }
+      if (!md->isObjCMethod()) ol.docify(", "); // there are more arguments
+    }
+    
+    if (doLineBreak && !isDefine && first && nArgs >= 2 && !md->isObjCMethod())
+    {
+      ol.startParameterType(true,0,doLineBreak);
+      ol.endParameterType();
+      ol.startParameterName(false);
+      ol.endParameterName(FALSE,FALSE,TRUE,doLineBreak);
+      first=FALSE;
+      ol.startParameterType(false,0,doLineBreak);
+      paramTypeStarted=TRUE;
+    }
+    
     if (isDefine || first)
     {
-      ol.startParameterType(first,0);
+      ol.startParameterType(first,0,doLineBreak);
       paramTypeStarted=TRUE;
       if (isDefine)
       {
@@ -257,7 +399,7 @@ static bool writeDefArgumentList(OutputList &ol,Definition *scope,MemberDef *md)
         ol.endParameterType();
         paramTypeStarted=FALSE;
       }
-      ol.startParameterName(defArgList->count()<2);
+      ol.startParameterName(nArgs<2);
     }
     if (hasFuncPtrType)
     {
@@ -307,32 +449,6 @@ static bool writeDefArgumentList(OutputList &ol,Definition *scope,MemberDef *md)
     }
     ++ali;
     a=ali.current();
-    if (a)
-    {
-      if (!md->isObjCMethod()) ol.docify(", "); // there are more arguments
-      if (!isDefine)
-      {
-        QCString key;
-        if (md->isObjCMethod() && a->attrib.length()>=2)
-        {
-          //printf("Found parameter keyword %s\n",a->attrib.data());
-          // strip [ and ]
-          key=a->attrib.mid(1,a->attrib.length()-2);
-          if (key!=",") key+=":"; // for normal keywords add colon
-        }
-        ol.endParameterName(FALSE,FALSE,!md->isObjCMethod());
-        if (paramTypeStarted)
-        {
-          ol.endParameterType();
-        }
-        ol.startParameterType(FALSE,key);
-        paramTypeStarted=TRUE;
-      }
-      else // isDefine
-      {
-        ol.endParameterName(FALSE,FALSE,TRUE);
-      }
-    }
     first=FALSE;
   }
   ol.pushGeneratorState();
@@ -342,8 +458,8 @@ static bool writeDefArgumentList(OutputList &ol,Definition *scope,MemberDef *md)
   ol.enableAll();
   if (htmlOn) ol.enable(OutputGenerator::Html);
   if (latexOn) ol.enable(OutputGenerator::Latex);
-  if (first) ol.startParameterName(defArgList->count()<2);
-  ol.endParameterName(TRUE,defArgList->count()<2,!md->isObjCMethod());
+  if (first) ol.startParameterName(nArgs<2);
+  ol.endParameterName(TRUE,nArgs<2,!md->isObjCMethod(),doLineBreak);
   ol.popGeneratorState();
   if (md->extraTypeChars())
   {
@@ -443,22 +559,40 @@ static void writeExceptionList(OutputList &ol, ClassDef *cd, MemberDef *md)
 
 static void writeTemplatePrefix(OutputList &ol,ArgumentList *al)
 {
-  ol.docify("template<");
+  ol.docify("template <");
   ArgumentListIterator ali(*al);
   Argument *a = ali.current();
+  bool first = true;
   while (a)
   {
-    ol.docify(a->type);
-    ol.docify(" ");
-    ol.docify(a->name);
-    if (a->defval.length()!=0)
+    if (!a->isHidden())
     {
-      ol.docify(" = ");
-      ol.docify(a->defval);
+      if (!first)
+        ol.docify(", ");
+      first = false;
+      if (a->type.isEmpty())
+        ol.docify(a->name);
+      else if (a->name.isEmpty())
+        ol.docify(a->type);
+      else
+      {
+        ol.docify(a->type);
+        ol.docify(" ");
+        ol.docify(a->name);
+      }
+      if (a->defval.length()!=0)
+      {
+        ol.docify(" = ");
+        ol.docify(a->defval);
+      }
+      ++ali;
+      a=ali.current();
     }
-    ++ali;
-    a=ali.current();
-    if (a) ol.docify(", ");
+    else
+    {
+      ++ali;
+      a=ali.current();
+    }
   }
   ol.docify("> ");
 }
@@ -1195,6 +1329,10 @@ void MemberDef::writeLink(OutputList &ol,ClassDef *,NamespaceDef *,
   static bool hideScopeNames     = Config_getBool(HIDE_SCOPE_NAMES);
   QCString sep = getLanguageSpecificSeparator(lang,TRUE);
   QCString n = name();
+  
+  QRegExp replaceExp("operator[\\=\\+\\-\\*\\/\\%\\=\\!\\>\\<\\|\\^\\~\\[]");
+  if (n.find(replaceExp) == 0)
+    n = n.insert(8, ' ');
   if (!hideScopeNames)
   {
     if (m_impl->enumScope && m_impl->livesInsideEnum)
@@ -1232,9 +1370,9 @@ void MemberDef::writeLink(OutputList &ol,ClassDef *,NamespaceDef *,
   }
   else // write only text
   {
-    ol.startBold();
+    //ol.startBold();
     ol.docify(n);
-    ol.endBold();
+    //ol.endBold();
   }
 }
 
@@ -1453,7 +1591,7 @@ void MemberDef::writeDeclaration(OutputList &ol,
   bool isAnonymous = annoClassDef || m_impl->annMemb || m_impl->annEnumType;
   ///printf("startMemberItem for %s\n",name().data());
   ol.startMemberItem(anchor(),
-                     isAnonymous ? 1 : m_impl->tArgList ? 3 : 0,
+                     isAnonymous ? 1 : (m_impl->tArgList && !m_impl->tArgList->allHidden()) ? 3 : 0,
                      inheritId
                     );
 
@@ -1491,7 +1629,7 @@ void MemberDef::writeDeclaration(OutputList &ol,
   }
 
   // *** write template lists
-  if (m_impl->tArgList && getLanguage()==SrcLangExt_Cpp)
+  if (m_impl->tArgList && getLanguage()==SrcLangExt_Cpp && !m_impl->tArgList->allHidden())
   {
     if (!isAnonymous) ol.startMemberTemplateParams();
     writeTemplatePrefix(ol,m_impl->tArgList);
@@ -1610,9 +1748,12 @@ void MemberDef::writeDeclaration(OutputList &ol,
   }
   else
   {
-    ol.insertMemberAlign(m_impl->tArgList!=0);
+    char lastChar = 0;
+    if (!ltype.isEmpty())
+      lastChar = ltype.at(ltype.length()-1);
+    ol.insertMemberAlign(m_impl->tArgList!=0,lastChar);
   }
-
+  
   // *** write name
   if (!name().isEmpty() && name().at(0)!='@') // hide anonymous stuff
   {
@@ -1665,7 +1806,7 @@ void MemberDef::writeDeclaration(OutputList &ol,
       writeLink(ol,rcd,nd,fd,gd,TRUE);
     }
   }
-
+  
   // add to index
   if (isEnumerate() && name().at(0)=='@')
   {
@@ -1689,7 +1830,9 @@ void MemberDef::writeDeclaration(OutputList &ol,
   // *** write arguments
   if (argsString() && !isObjCMethod())
   {
+#if 0
     if (!isDefine() && !isTypedef()) ol.writeString(" ");
+#endif
     linkifyText(TextGeneratorOLImpl(ol), // out
                 d,                       // scope
                 getBodyDef(),            // fileScope
@@ -1900,6 +2043,8 @@ bool MemberDef::isDetailedSectionLinkable() const
          (hasMultiLineInitializer() && !hideUndocMembers) ||
          // has one or more documented arguments
          (m_impl->defArgList!=0 && m_impl->defArgList->hasDocumentation()) ||
+         // has one or more documented template arguments
+         (m_impl->tArgList!=0 && m_impl->tArgList->hasTemplateDocumentation()) ||
          // is an attribute or property - need to display that tag
          (m_impl->memSpec & (Entry::Attribute|Entry::Property)) ||
          // has user comments
@@ -2682,7 +2827,7 @@ void MemberDef::writeDocumentation(MemberList *ml,
 
     ClassDef *cd=getClassDef();
     NamespaceDef *nd=getNamespaceDef();
-    if (!Config_getBool(HIDE_SCOPE_NAMES))
+    if (!Config_getBool(HIDE_TEMPLATE_SCOPE_NAMES))
     {
       bool first=TRUE;
       SrcLangExt lang = getLanguage();
@@ -2705,25 +2850,28 @@ void MemberDef::writeDocumentation(MemberList *ml,
       else // definition gets it template parameters from its class
         // (since no definition was found)
       {
-        if (cd && lang==SrcLangExt_Cpp && !isTemplateSpecialization())
+        if (!Config_getBool(HIDE_TEMPLATE_CLASS_SCOPE_NAMES))        
         {
-          QList<ArgumentList> tempParamLists;
-          cd->getTemplateParameterLists(tempParamLists);
-          //printf("#tempParamLists=%d\n",tempParamLists.count());
-          QListIterator<ArgumentList> ali(tempParamLists);
-          ArgumentList *tal;
-          for (ali.toFirst();(tal=ali.current());++ali)
+          if (cd && lang==SrcLangExt_Cpp && !isTemplateSpecialization())
           {
-            if (tal->count()>0)
+            QList<ArgumentList> tempParamLists;
+            cd->getTemplateParameterLists(tempParamLists);
+            //printf("#tempParamLists=%d\n",tempParamLists.count());
+            QListIterator<ArgumentList> ali(tempParamLists);
+            ArgumentList *tal;
+            for (ali.toFirst();(tal=ali.current());++ali)
             {
-              if (!first) ol.docify(" ");
-              ol.startMemberDocPrefixItem();
-              writeTemplatePrefix(ol,tal);
-              ol.endMemberDocPrefixItem();
+              if (tal->count()>0)
+              {
+                if (!first) ol.docify(" ");
+                ol.startMemberDocPrefixItem();
+                writeTemplatePrefix(ol,tal);
+                ol.endMemberDocPrefixItem();
+              }
             }
           }
         }
-        if (m_impl->tArgList && lang==SrcLangExt_Cpp) // function template prefix
+        if (m_impl->tArgList && lang==SrcLangExt_Cpp && !m_impl->tArgList->allHidden()) // function template prefix
         {
           ol.startMemberDocPrefixItem();
           writeTemplatePrefix(ol,m_impl->tArgList);
@@ -2901,11 +3049,13 @@ void MemberDef::writeDocumentation(MemberList *ml,
   QCString brief           = briefDescription();
   QCString detailed        = documentation();
   ArgumentList *docArgList = m_impl->defArgList;
+  ArgumentList *templateDocArgList = m_impl->tArgList;
   if (m_impl->templateMaster)
   {
     brief      = m_impl->templateMaster->briefDescription();
     detailed   = m_impl->templateMaster->documentation();
     docArgList = m_impl->templateMaster->argumentList();
+    templateDocArgList  = m_impl->templateMaster->templateArguments();
   }
 
   /* write brief description */
@@ -2957,7 +3107,7 @@ void MemberDef::writeDocumentation(MemberList *ml,
   //printf("***** defArgList=%p name=%s docs=%s hasDocs=%d\n",
   //     defArgList,
   //     defArgList?defArgList->hasDocumentation():-1);
-  if (docArgList!=0 && docArgList->hasDocumentation())
+  if (docArgList!=0 && docArgList->hasDocumentation() && !docArgList->allHidden())
   {
     QCString paramDocs;
     ArgumentListIterator ali(*docArgList);
@@ -2965,7 +3115,7 @@ void MemberDef::writeDocumentation(MemberList *ml,
     // convert the parameter documentation into a list of @param commands
     for (ali.toFirst();(a=ali.current());++ali)
     {
-      if (a->hasDocumentation())
+      if (a->hasDocumentation() && !a->isHidden())
       {
         QCString direction = extractDirection(a->docs);
         paramDocs+="@param"+direction+" "+a->name+" "+a->docs;
@@ -2980,7 +3130,31 @@ void MemberDef::writeDocumentation(MemberList *ml,
         TRUE,         // indexWords
         FALSE         // isExample
         );
-
+  }
+  
+  if (templateDocArgList!=0 && templateDocArgList->hasTemplateDocumentation() && !templateDocArgList->allHidden())
+  {
+    QCString paramDocs;
+    ArgumentListIterator ali(*templateDocArgList);
+    Argument *a;
+    // convert the parameter documentation into a list of @tparam commands
+    for (ali.toFirst();(a=ali.current());++ali)
+    {
+      if (a->hasTemplateDocumentation() && !a->isHidden())
+      {
+        QCString direction = extractDirection(a->docs);
+        paramDocs+="@tparam"+direction+" "+getTemplateArgumentName(a->type, a->name)+" "+a->docs;
+      }
+    }
+    // feed the result to the documentation parser
+    ol.generateDoc(
+        docFile(),docLine(),
+        getOuterScope()?getOuterScope():container,
+        this,         // memberDef
+        paramDocs,    // docStr
+        TRUE,         // indexWords
+        FALSE         // isExample
+        );
   }
 
   _writeEnumValues(ol,scopedContainer,cfname,ciname,cname);
@@ -3303,7 +3477,9 @@ bool MemberDef::hasDocumentation() const
 {
   return Definition::hasDocumentation() ||
          (m_impl->mtype==MemberType_Enumeration && m_impl->docEnumValues) ||  // has enum values
-         (m_impl->defArgList!=0 && m_impl->defArgList->hasDocumentation());   // has doc arguments
+         (m_impl->defArgList!=0 && m_impl->defArgList->hasDocumentation()) || // has doc arguments
+         (m_impl->tArgList!=0 && m_impl->tArgList->hasTemplateDocumentation())// has template doc arguments
+  ;
 }
 
 #if 0
@@ -4966,6 +5142,15 @@ static void transferArgumentDocumentation(ArgumentList *decAl,ArgumentList *defA
       else if (defA->docs.isEmpty() && !decA->docs.isEmpty())
       {
         defA->docs = decA->docs.copy();
+      }
+
+      if (decA->hide && !defA->hide)
+      {
+        defA->hide = true;
+      }
+      else if (defA->hide && !decA->hide)
+      {
+        decA->hide = true;
       }
     }
   }

@@ -339,7 +339,7 @@ QCString ClassDef::displayName(bool includeScope) const
   {
     if (includeScope)
     {
-      n=qualifiedNameWithTemplateParameters();
+      n=qualifiedNameWithTemplateParameters(0,0,true);
     }
     else
     {
@@ -899,7 +899,7 @@ static void searchTemplateSpecs(/*in*/  Definition *d,
       result.append(cd->templateArguments());
       if (!isSpecialization)
       {
-        name+=tempArgListToString(cd->templateArguments(),lang);
+        name+=tempArgListToString(cd->templateArguments(),lang,true);
       }
     }
   }
@@ -922,25 +922,41 @@ static void writeTemplateSpec(OutputList &ol,Definition *d,
     ArgumentList *al;
     for (spi.toFirst();(al=spi.current());++spi)
     {
-      ol.docify("template<");
+      ol.docify("template <");
       QListIterator<Argument> ali(*al);
       Argument *a;
+      bool first = true;
       while ((a=ali.current()))
       {
-        ol.docify(a->type);
-        if (!a->name.isEmpty())
+        if (!a->isHidden())
         {
-          ol.docify(" ");
-          ol.docify(a->name);
+          if (!first)
+            ol.docify(", ");
+          first = false;
+          
+          if (a->type.isEmpty())
+            ol.docify(a->name);
+          else if (a->name.isEmpty())
+            ol.docify(a->type);
+          else
+          {
+            ol.docify(a->type);
+            ol.docify(" ");
+            ol.docify(a->name);
+          }
+          if (a->defval.length()!=0)
+          {
+            ol.docify(" = ");
+            ol.docify(a->defval);
+          }
+          ++ali;
+          a=ali.current();
         }
-        if (a->defval.length()!=0)
+        else
         {
-          ol.docify(" = ");
-          ol.docify(a->defval);
+          ++ali;
+          a=ali.current();
         }
-        ++ali;
-        a=ali.current();
-        if (a) ol.docify(", ");
       }
       ol.docify(">");
       ol.lineBreak();
@@ -1007,6 +1023,34 @@ void ClassDef::writeDetailedDocumentationBody(OutputList &ol)
   {
     ol.generateDoc(docFile(),docLine(),this,0,documentation(),TRUE,FALSE);
   }
+  
+  ArgumentList *templateDocArgList = templateMaster() ? templateMaster()->templateArguments() : templateArguments();
+  
+  if (templateDocArgList!=0 && templateDocArgList->hasTemplateDocumentation() && !templateDocArgList->allHidden())
+  {
+    QCString paramDocs;
+    ArgumentListIterator ali(*templateDocArgList);
+    Argument *a;
+    // convert the parameter documentation into a list of @tparam commands
+    for (ali.toFirst();(a=ali.current());++ali)
+    {
+      if (a->hasTemplateDocumentation() && !a->isHidden())
+      {
+        QCString direction = extractDirection(a->docs);
+        paramDocs+="@tparam"+direction+" "+getTemplateArgumentName(a->type, a->name)+" "+a->docs;
+      }
+    }
+    // feed the result to the documentation parser
+    ol.generateDoc(
+        docFile(),docLine(),
+        this,
+        0,         // memberDef
+        paramDocs,    // docStr
+        TRUE,         // indexWords
+        FALSE         // isExample
+        );
+  }
+  
   // write type constraints
   writeTypeConstraints(ol,this,m_impl->typeConstraints);
 
@@ -1060,9 +1104,12 @@ void ClassDef::writeDetailedDescription(OutputList &ol, const QCString &/*pageTy
       ol.popGeneratorState();
     }
 
-    ol.startGroupHeader();
-    ol.parseText(title);
-    ol.endGroupHeader();
+    if (title != " ")
+    {
+      ol.startGroupHeader();
+      ol.parseText(title);
+      ol.endGroupHeader();
+    }
 
     writeDetailedDocumentationBody(ol);
   }
@@ -1110,6 +1157,7 @@ void ClassDef::showUsedFiles(OutputList &ol)
 
 
   ol.writeRuler();
+  ol.startSourceDef();
   ol.parseText(generatedFromFiles());
 
   bool first=TRUE;
@@ -1172,6 +1220,7 @@ void ClassDef::showUsedFiles(OutputList &ol)
   }
   if (!first) ol.endItemList();
 
+  ol.endSourceDef();
   ol.popGeneratorState();
 }
 
@@ -3847,7 +3896,7 @@ void ClassDef::getTemplateParameterLists(QList<ArgumentList> &lists) const
 }
 
 QCString ClassDef::qualifiedNameWithTemplateParameters(
-    QList<ArgumentList> *actualParams,int *actualParamIndex) const
+    QList<ArgumentList> *actualParams,int *actualParamIndex,bool forDisplay) const
 {
   //static bool optimizeOutputJava = Config_getBool(OPTIMIZE_OUTPUT_JAVA);
   static bool hideScopeNames = Config_getBool(HIDE_SCOPE_NAMES);
@@ -3859,7 +3908,7 @@ QCString ClassDef::qualifiedNameWithTemplateParameters(
     if (d->definitionType()==Definition::TypeClass)
     {
       ClassDef *cd=(ClassDef *)d;
-      scName = cd->qualifiedNameWithTemplateParameters(actualParams,actualParamIndex);
+      scName = cd->qualifiedNameWithTemplateParameters(actualParams,actualParamIndex,forDisplay);
     }
     else if (!hideScopeNames)
     {
@@ -3889,7 +3938,7 @@ QCString ClassDef::qualifiedNameWithTemplateParameters(
       al = actualParams->at(*actualParamIndex);
       if (!isSpecialization)
       {
-        scName+=tempArgListToString(al,lang);
+        scName+=tempArgListToString(al,lang,forDisplay);
       }
       (*actualParamIndex)++;
     }
@@ -3897,7 +3946,7 @@ QCString ClassDef::qualifiedNameWithTemplateParameters(
     {
       if (!isSpecialization)
       {
-        scName+=tempArgListToString(templateArguments(),lang);
+        scName+=tempArgListToString(templateArguments(),lang,forDisplay);
       }
     }
   }

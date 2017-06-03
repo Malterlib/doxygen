@@ -182,6 +182,8 @@ void generateFileRef(OutputDocInterface &od,const char *,
 
 void writePageRef(OutputDocInterface &od,const char *cn,const char *mn);
 
+QCString getTemplateArgumentName(const QCString &type, const QCString &name);
+
 QCString getCanonicalTemplateSpec(Definition *d,FileDef *fs,const QCString& spec);
 
 bool matchArguments2(Definition *srcScope,FileDef *srcFileScope,ArgumentList *srcAl,
@@ -226,11 +228,11 @@ inline bool isId(int c)
   return c=='_' || c>=128 || c<0 || isalnum(c);
 }
 
-QCString removeRedundantWhiteSpace(const QCString &s);
+QCString removeRedundantWhiteSpace(const QCString &s, bool forDisplay=false);
 
-QCString argListToString(ArgumentList *al,bool useCanonicalType=FALSE,bool showDefVals=TRUE);
+QCString argListToString(ArgumentList *al,bool useCanonicalType=FALSE,bool showDefVals=TRUE,bool forDisplay=false);
 
-QCString tempArgListToString(ArgumentList *al,SrcLangExt lang);
+QCString tempArgListToString(ArgumentList *al,SrcLangExt lang,bool forDisplay=false);
 
 QCString generateMarker(int id);
 

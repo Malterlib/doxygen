@@ -1694,7 +1694,7 @@ struct CharAroundSpace
 static CharAroundSpace g_charAroundSpace;
 
 // Note: this function is not reentrant due to the use of static buffer!
-QCString removeRedundantWhiteSpace(const QCString &s)
+QCString removeRedundantWhiteSpace(const QCString &s,bool forDisplay)
 {
   static bool cliSupport = Config_getBool(CPP_CLI_SUPPORT);
   static bool vhdl = Config_getBool(OPTIMIZE_OUTPUT_VHDL);
@@ -2228,15 +2228,25 @@ void writeExample(OutputList &ol,ExampleSDict *ed)
 }
 
 
-QCString argListToString(ArgumentList *al,bool useCanonicalType,bool showDefVals)
+QCString argListToString(ArgumentList *al,bool useCanonicalType,bool showDefVals,bool forDisplay)
 {
   QCString result;
   if (al==0) return result;
   ArgumentListIterator ali(*al);
   Argument *a=ali.current();
   result+="(";
+  bool first = true;
   while (a)
   {
+    if (forDisplay && a->isHidden())
+    {
+      ++ali;
+      a=ali.current();
+      continue;
+    }     
+    if (!first)
+      result+=", ";
+    first = false;
     QCString type1 = useCanonicalType && !a->canType.isEmpty() ?
       a->canType : a->type;
     QCString type2;
@@ -2262,9 +2272,16 @@ QCString argListToString(ArgumentList *al,bool useCanonicalType,bool showDefVals
     {
       result+="="+a->defval;
     }
+    if (!a->docs.isEmpty())
+    {
+      result+="/// "+a->docs;
+      if (a->isHidden())
+        result+=" @hidden";
+    }
+    else if (a->isHidden())
+      result+="/// @hidden";
     ++ali;
     a = ali.current();
-    if (a) result+=", ";
   }
   result+=")";
   if (al->constSpecifier) result+=" const";
@@ -2273,18 +2290,28 @@ QCString argListToString(ArgumentList *al,bool useCanonicalType,bool showDefVals
   else if (al->refQualifier==RefQualifierRValue) result+=" &&";
   if (!al->trailingReturnType.isEmpty()) result+=" -> "+al->trailingReturnType;
   if (al->pureSpecifier) result+=" =0";
-  return removeRedundantWhiteSpace(result);
+  return removeRedundantWhiteSpace(result, forDisplay);
 }
 
-QCString tempArgListToString(ArgumentList *al,SrcLangExt lang)
+QCString tempArgListToString(ArgumentList *al,SrcLangExt lang,bool forDisplay)
 {
   QCString result;
   if (al==0) return result;
   result="<";
   ArgumentListIterator ali(*al);
   Argument *a=ali.current();
+  bool first = true;
   while (a)
   {
+    if (forDisplay && a->isHidden())
+    {
+      ++ali;
+      a=ali.current();
+      continue;
+    }     
+    if (!first)
+      result+=", ";
+    first = false;
     if (!a->name.isEmpty()) // add template argument name
     {
       if (a->type.left(4)=="out") // C# covariance
@@ -2325,10 +2352,9 @@ QCString tempArgListToString(ArgumentList *al,SrcLangExt lang)
     }
     ++ali;
     a=ali.current();
-    if (a) result+=", ";
   }
   result+=">";
-  return removeRedundantWhiteSpace(result);
+  return removeRedundantWhiteSpace(result, forDisplay);
 }
 
 
@@ -3429,6 +3455,17 @@ static QCString stripDeclKeywords(const QCString &s)
 // forward decl for circular dependencies
 static QCString extractCanonicalType(Definition *d,FileDef *fs,QCString type);
 
+QCString getTemplateArgumentName(const QCString &type, const QCString &name)
+{
+  if (!name.isEmpty())
+    return name;
+  int i=type.findRev(" ");
+  if (i!=-1) 
+    return type.right(type.length() - i);
+  return type;
+}
+
+
 QCString getCanonicalTemplateSpec(Definition *d,FileDef *fs,const QCString& spec)
 {
   
@@ -3856,6 +3893,10 @@ void mergeArguments(ArgumentList *srcAl,ArgumentList *dstAl,bool forceNameOverwr
       //printf("Defval changing `%s'->`%s'\n",dstA->defval.data(),srcA->defval.data());
       dstA->defval=srcA->defval.copy();
     }
+    if (!dstA->hide && srcA->hide)
+      dstA->hide = true;
+    if (dstA->hide && !srcA->hide)
+      srcA->hide = true;
 
     // fix wrongly detected const or volatile specifiers before merging.
     // example: "const A *const" is detected as type="const A *" name="const"

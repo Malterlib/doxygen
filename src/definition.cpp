@@ -921,6 +921,7 @@ void Definition::writeSourceDef(OutputList &ol,const char *)
   static bool latexSourceCode = Config_getBool(LATEX_SOURCE_CODE);
   static bool rtfSourceCode = Config_getBool(RTF_SOURCE_CODE);
   ol.pushGeneratorState();
+  ol.startSourceDef();
   //printf("Definition::writeSourceRef %d %p\n",bodyLine,bodyDef);
   QCString fn = getSourceFileBase();
   if (!fn.isEmpty())
@@ -1070,6 +1071,7 @@ void Definition::writeSourceDef(OutputList &ol,const char *)
       err("translation error: invalid markers in trDefinedAtLineInSourceFile()\n");
     }
   }
+  ol.endSourceDef();
   ol.popGeneratorState();
 }
 

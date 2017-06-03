@@ -20,6 +20,7 @@
 
 #include "outputgen.h"
 #include "ftextstream.h"
+#include <string>
 
 //#define PREFRAG_START "<div class=\"fragment\"><pre class=\"fragment\">"
 //#define PREFRAG_END   "</pre></div>"
@@ -61,9 +62,18 @@ class HtmlCodeGenerator : public CodeOutputInterface
                         const char *anchor,const char *name,
                         const char *tooltip);
     void docify(const char *str);
+    void handleDeferredCodify();
     bool m_streamSet;
     FTextStream m_t;
+    std::string m_deferredCodify;
+  
     int m_col;
+    bool m_inComment;
+    bool m_inChar;
+    bool m_inString;
+    bool m_inPreprocessor;
+    bool m_inCommentStart;
+    bool m_inDocumentationComment;
     QCString m_relPath;
 };
 
@@ -199,7 +209,7 @@ class HtmlGenerator : public OutputGenerator
     void startMemberGroup();
     void endMemberGroup(bool);
 
-    void insertMemberAlign(bool);
+    void insertMemberAlign(bool, char);
     void startMemberDescription(const char *anchor,const char *inheritId);
     void endMemberDescription();
     void startMemberDeclaration() {}
@@ -298,16 +308,20 @@ class HtmlGenerator : public OutputGenerator
     { t << "<div class=\"textblock\">"; }
     void endTextBlock(bool) 
     { t << "</div>"; }
+    void startSourceDef() 
+    { t << "<div class=\"sourcedef\">"; }
+    void endSourceDef() 
+    { t << "</div>"; }
     void lastIndexPage() {}
 
     void startMemberDocPrefixItem();
     void endMemberDocPrefixItem();
     void startMemberDocName(bool);
     void endMemberDocName();
-    void startParameterType(bool first,const char *key);
+    void startParameterType(bool first,const char *key,bool doLineBreak);
     void endParameterType();
     void startParameterName(bool);
-    void endParameterName(bool last,bool emptyList,bool closeBracket);
+    void endParameterName(bool last,bool emptyList,bool closeBracket,bool doLineBreak);
     void startParameterList(bool);
     void endParameterList();
     virtual void exceptionEntry(const char*,bool);

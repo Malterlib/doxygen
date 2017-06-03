@@ -4491,6 +4491,7 @@ OPERATOR  "operator"{B}*({ARITHOP}|{ASSIGNOP}|{LOGICOP}|{BITOP})
 					  fullArgString+=*yytext;
 					  //printf("end template list %s\n",copyArgString->data());
 					  stringToArgumentList(fullArgString,currentArgumentList);
+					  handleParametersCommentBlocks(currentArgumentList);
 					  BEGIN( currentArgumentContext );
 					}
 <CopyArgRound>"("			{
@@ -6725,31 +6726,34 @@ static void handleParametersCommentBlocks(ArgumentList *al)
 
       current->doc.resize(0);
       current->brief.resize(0);
+      current->hideArgument = false;
 
       //printf("handleParametersCommentBlock [%s]\n",doc.data());
       while (parseCommentBlock(
-	     g_thisParser,
-	     current,
-	     a->docs,            // text
-	     yyFileName,         // file
-	     current->docLine,   // line of block start
-	     FALSE, 
-	     FALSE,
-	     FALSE,
-	     protection,
-	     position,
-	     needsEntry
-	    )
-	  ) 
+         g_thisParser,
+         current,
+         a->docs,            // text
+         yyFileName,         // file
+         current->docLine,   // line of block start
+         FALSE, 
+         FALSE,
+         FALSE,
+         protection,
+         position,
+         needsEntry
+        )
+      ) 
       {
-	//printf("handleParametersCommentBlock position=%d [%s]\n",position,doc.data()+position);
-	if (needsEntry) newEntry();
+        //printf("handleParametersCommentBlock position=%d [%s]\n",position,doc.data()+position);
+        if (needsEntry) newEntry();
       }
       if (needsEntry)
       {
-	newEntry();
+        newEntry();
       }
       a->docs = current->doc;
+      if (current->hideArgument)
+        a->hide = TRUE;
 
       // restore context
       current->doc       = orgDoc;

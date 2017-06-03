@@ -2768,7 +2768,7 @@ void RTFGenerator::endParamList()
   t << "}";
 }
 
-void RTFGenerator::startParameterType(bool first,const char *key)
+void RTFGenerator::startParameterType(bool first,const char *key,bool doLineBreak)
 {
   DBG_RTF(t << "{\\comment (startParameterType)}"    << endl)
   if (!first && key)
