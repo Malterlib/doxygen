@@ -144,6 +144,8 @@ void generateFileRef(OutputDocInterface &od,const QCString &,
 
 void writePageRef(OutputDocInterface &od,const QCString &cn,const QCString &mn);
 
+QCString getTemplateArgumentName(const QCString &type, const QCString &name);
+
 //QCString getCanonicalTemplateSpec(const Definition *d,const FileDef *fs,const QCString& spec);
 
 bool matchArguments2(const Definition *srcScope,const FileDef *srcFileScope,const ArgumentList *srcAl,
@@ -177,11 +179,11 @@ inline bool isIdJS(int c)
   return c>=128 || c<0 || isalnum(c);
 }
 
-QCString removeRedundantWhiteSpace(const QCString &s);
+QCString removeRedundantWhiteSpace(const QCString &s, bool forDisplay=false);
 
-QCString argListToString(const ArgumentList &al,bool useCanonicalType=FALSE,bool showDefVals=TRUE);
+QCString argListToString(const ArgumentList &al,bool useCanonicalType=FALSE,bool showDefVals=TRUE,bool forDisplay=false);
 
-QCString tempArgListToString(const ArgumentList &al,SrcLangExt lang,bool includeDefaults=true);
+QCString tempArgListToString(const ArgumentList &al,SrcLangExt lang,bool includeDefaults=true,bool forDisplay=false);
 
 QCString generateMarker(int id);
 

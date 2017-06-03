@@ -464,7 +464,7 @@ class DocVerbatim : public DocNode
     enum Type { Code, HtmlOnly, ManOnly, LatexOnly, RtfOnly, XmlOnly, Verbatim, Dot, Msc, DocbookOnly, PlantUML, JavaDocCode, JavaDocLiteral };
     DocVerbatim(DocParser &parser,DocNode *parent,const QCString &context,
                 const QCString &text, Type t,bool isExample,
-                const QCString &exampleFile,bool isBlock=FALSE,const QCString &lang=QCString());
+                const QCString &exampleFile,bool isBlock=FALSE,const QCString &lang=QCString(), const QCString &className=QCString());
     Type type() const            { return m_type; }
     QCString text() const        { return m_text; }
     QCString context() const     { return m_context; }
@@ -473,6 +473,7 @@ class DocVerbatim : public DocNode
     QCString exampleFile() const { return m_exampleFile; }
     QCString relPath() const     { return m_relPath; }
     QCString language() const    { return m_lang; }
+    QCString className() const    { return m_className; }
     bool isBlock() const         { return m_isBlock; }
     bool hasCaption() const      { return !m_children.empty(); }
     QCString width() const       { return m_width; }
@@ -498,6 +499,7 @@ class DocVerbatim : public DocNode
     QCString  m_exampleFile;
     QCString  m_relPath;
     QCString  m_lang;
+    QCString  m_className;
     bool      m_isBlock = false;
     QCString  m_width;
     QCString  m_height;

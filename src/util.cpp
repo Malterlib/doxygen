@@ -546,7 +546,7 @@ struct CharAroundSpace
 static CharAroundSpace g_charAroundSpace;
 
 // Note: this function is not reentrant due to the use of static buffer!
-QCString removeRedundantWhiteSpace(const QCString &s)
+QCString removeRedundantWhiteSpace(const QCString &s,bool forDisplay)
 {
   bool cliSupport = Config_getBool(CPP_CLI_SUPPORT);
   bool vhdl = Config_getBool(OPTIMIZE_OUTPUT_VHDL);
@@ -658,8 +658,7 @@ QCString removeRedundantWhiteSpace(const QCString &s)
       case '<': // current char is a <
         *dst++=c;
         if (i<l-1 &&
-            (isId(nc)) && // next char is an id char
-            (osp<8) // string in front is not "operator"
+            (osp >= 8) // string in front is "operator"
            )
         {
           *dst++=' '; // add extra space
@@ -667,8 +666,8 @@ QCString removeRedundantWhiteSpace(const QCString &s)
         break;
       case '>': // current char is a >
         if (i>0 && !isspace(static_cast<uchar>(pc)) &&
-            (isId(pc) || pc=='*' || pc=='&' || pc=='.' || pc=='>') && // prev char is an id char or space or *&.
-            (osp<8 || (osp==8 && pc!='-')) // string in front is not "operator>" or "operator->"
+            (pc=='*' || pc=='&' || pc=='.') && // prev char is an id char or space or *&.
+            (osp>=8) // string in front is "operator>"
            )
         {
           *dst++=' '; // add extra space in front
@@ -1151,14 +1150,25 @@ void writeExamples(OutputList &ol,const ExampleList &list)
 }
 
 
-QCString argListToString(const ArgumentList &al,bool useCanonicalType,bool showDefVals)
+QCString argListToString(const ArgumentList &al,bool useCanonicalType,bool showDefVals,bool forDisplay)
 {
   QCString result;
   if (!al.hasParameters()) return result;
   result+="(";
+  bool first = true;
   for (auto it = al.begin() ; it!=al.end() ;)
   {
     Argument a = *it;
+    if (forDisplay && a.isHidden())
+    {
+      ++it;
+      continue;
+    }
+
+    if (!first)
+      result+=", ";
+    first = false;
+
     QCString type1 = useCanonicalType && !a.canType.isEmpty() ? a.canType : a.type;
     QCString type2;
     int i=type1.find(")("); // hack to deal with function pointers
@@ -1183,20 +1193,27 @@ QCString argListToString(const ArgumentList &al,bool useCanonicalType,bool showD
     {
       result+="="+a.defval;
     }
+    if (!a.docs.isEmpty())
+    {
+      result+="/// "+a.docs;
+      if (a.isHidden())
+        result+=" @hidden";
+    }
+    else if (a.isHidden())
+      result+="/// @hidden";
     ++it;
-    if (it!=al.end()) result+=", ";
   }
   result+=")";
   if (al.constSpecifier()) result+=" const";
   if (al.volatileSpecifier()) result+=" volatile";
   if (al.refQualifier()==RefQualifierLValue) result+=" &";
   else if (al.refQualifier()==RefQualifierRValue) result+=" &&";
-  if (!al.trailingReturnType().isEmpty()) result+=al.trailingReturnType();
+  if (showDefVals && !al.trailingReturnType().isEmpty()) result+=al.trailingReturnType();
   if (al.pureSpecifier()) result+=" =0";
-  return removeRedundantWhiteSpace(result);
+  return removeRedundantWhiteSpace(result,forDisplay);
 }
 
-QCString tempArgListToString(const ArgumentList &al,SrcLangExt lang,bool includeDefault)
+QCString tempArgListToString(const ArgumentList &al,SrcLangExt lang,bool includeDefault,bool forDisplay)
 {
   QCString result;
   if (al.empty()) return result;
@@ -1204,6 +1221,9 @@ QCString tempArgListToString(const ArgumentList &al,SrcLangExt lang,bool include
   bool first=true;
   for (const auto &a : al)
   {
+    if (forDisplay && a.isHidden())
+      continue;
+
     if (a.defval.isEmpty() || includeDefault)
     {
       if (!first) result+=", ";
@@ -1241,7 +1261,7 @@ QCString tempArgListToString(const ArgumentList &al,SrcLangExt lang,bool include
     }
   }
   result+=">";
-  return removeRedundantWhiteSpace(result);
+  return removeRedundantWhiteSpace(result, forDisplay);
 }
 
 
@@ -1595,6 +1615,16 @@ static QCString stripDeclKeywords(const QCString &s)
 
 // forward decl for circular dependencies
 static QCString extractCanonicalType(const Definition *d,const FileDef *fs,QCString type,SrcLangExt lang);
+
+QCString getTemplateArgumentName(const QCString &type, const QCString &name)
+{
+  if (!name.isEmpty())
+    return name;
+  int i=type.findRev(" ");
+  if (i!=-1)
+    return type.right(type.length() - i);
+  return type;
+}
 
 static QCString getCanonicalTemplateSpec(const Definition *d,const FileDef *fs,const QCString& spec,SrcLangExt lang)
 {
@@ -2038,6 +2068,10 @@ void mergeArguments(ArgumentList &srcAl,ArgumentList &dstAl,bool forceNameOverwr
       //printf("Defval changing '%s'->'%s'\n",qPrint(dstA.defval),qPrint(srcA.defval));
       dstA.defval=srcA.defval;
     }
+    if (!dstA.hide && srcA.hide)
+      dstA.hide = true;
+    if (dstA.hide && !srcA.hide)
+      srcA.hide = true;
 
     // fix wrongly detected const or volatile specifiers before merging.
     // example: "const A *const" is detected as type="const A *" name="const"
@@ -6377,11 +6411,12 @@ void writeColoredImgData(const QCString &dir,ColoredImgDataItem data[])
   int hue   = Config_getInt(HTML_COLORSTYLE_HUE);
   int sat   = Config_getInt(HTML_COLORSTYLE_SAT);
   int gamma = Config_getInt(HTML_COLORSTYLE_GAMMA);
+  int invert= Config_getInt(HTML_COLORSTYLE_INVERT);
   while (data->name)
   {
     QCString fileName = dir+"/"+data->name;
     ColoredImage img(data->width,data->height,data->content,data->alpha,
-                     sat,hue,gamma);
+                     sat,hue,gamma,invert);
     if (!img.save(fileName))
     {
       fprintf(stderr,"Warning: Cannot open file %s for writing\n",data->name);
@@ -6407,7 +6442,8 @@ QCString replaceColorMarkers(const QCString &str)
   int hue   = Config_getInt(HTML_COLORSTYLE_HUE);
   int sat   = Config_getInt(HTML_COLORSTYLE_SAT);
   int gamma = Config_getInt(HTML_COLORSTYLE_GAMMA);
-  size_t sl=s.length();
+  int invert= Config_getInt(HTML_COLORSTYLE_INVERT);
+ size_t sl=s.length();
   size_t p=0;
   for (; it!=end ; ++it)
   {
@@ -6424,7 +6460,7 @@ QCString replaceColorMarkers(const QCString &str)
     int red,green,blue;
     int level = HEXTONUM(lumStr[0])*16+HEXTONUM(lumStr[1]);
     ColoredImage::hsl2rgb(hue/360.0,sat/255.0,
-                          pow(level/255.0,gamma/100.0),&r,&g,&b);
+                          Image::getColoredLumiance(level,invert,gamma),&r,&g,&b);
     red   = static_cast<int>(r*255.0);
     green = static_cast<int>(g*255.0);
     blue  = static_cast<int>(b*255.0);

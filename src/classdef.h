@@ -276,7 +276,7 @@ class ClassDef : public Definition
     virtual ArgumentLists getTemplateParameterLists() const = 0;
 
     virtual QCString qualifiedNameWithTemplateParameters(
-        const ArgumentLists *actualParams=0,uint *actualParamIndex=0) const = 0;
+        const ArgumentLists *actualParams=0,uint *actualParamIndex=0,bool forDisplay=false) const = 0;
 
     /** Returns TRUE if there is at least one pure virtual member in this
      *  class.

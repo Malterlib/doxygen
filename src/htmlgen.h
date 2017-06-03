@@ -17,6 +17,7 @@
 #define HTMLGEN_H
 
 #include "outputgen.h"
+#include <string>
 
 class HtmlCodeGenerator : public CodeOutputInterface
 {
@@ -53,8 +54,17 @@ class HtmlCodeGenerator : public CodeOutputInterface
                         const QCString &anchor,const QCString &name,
                         const QCString &tooltip);
     void docify(const QCString &str);
+    void handleDeferredCodify();
     TextStream &m_t;
+    std::string m_deferredCodify;
+
     int m_col = 0;
+    bool m_inComment = false;
+    bool m_inChar = false;
+    bool m_inString = false;
+    bool m_inPreprocessor = false;
+    bool m_inCommentStart = false;
+    bool m_inDocumentationComment = false;
     QCString m_relPath;
     bool m_lineOpen = false;
     int m_id = 0;
@@ -195,7 +205,7 @@ class HtmlGenerator : public OutputGenerator
     void startMemberGroup();
     void endMemberGroup(bool);
 
-    void insertMemberAlign(bool);
+    void insertMemberAlign(bool,char);
     void insertMemberAlignLeft(int,bool);
     void startMemberDescription(const QCString &anchor,const QCString &inheritId, bool typ);
     void endMemberDescription();
@@ -292,16 +302,20 @@ class HtmlGenerator : public OutputGenerator
     { m_t << "<div class=\"textblock\">"; }
     void endTextBlock(bool)
     { m_t << "</div>"; }
+    void startSourceDef()
+    { m_t << "<div class=\"sourcedef\">"; }
+    void endSourceDef()
+    { m_t << "</div>"; }
     void lastIndexPage() {}
 
     void startMemberDocPrefixItem();
     void endMemberDocPrefixItem();
     void startMemberDocName(bool);
     void endMemberDocName();
-    void startParameterType(bool first,const QCString &key);
+    void startParameterType(bool first,const QCString &key,bool doLineBreak);
     void endParameterType();
     void startParameterName(bool);
-    void endParameterName(bool last,bool emptyList,bool closeBracket);
+    void endParameterName(bool last,bool emptyList,bool closeBracket,bool doLineBreak);
     void startParameterList(bool);
     void endParameterList();
     void exceptionEntry(const QCString &,bool);

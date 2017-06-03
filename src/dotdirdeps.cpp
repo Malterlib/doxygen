@@ -186,7 +186,7 @@ static void drawClusterOpening(TextStream &outputStream, const DirDef *const dir
   }
   outputStream << "\", "
       "fontname=\"" << Config_getString(DOT_FONTNAME) << "\", "
-      "fontsize=\"" << Config_getInt(DOT_FONTSIZE) << "\", "
+      "fontsize=\"" << Config_getInt(DOT_FONTSIZE) << "px\", "
       "URL=\"" << addHtmlExtensionIfMissing(directory->getOutputFileBase()) << "\""
       "]\n";
   if (!isAncestor)

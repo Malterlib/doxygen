@@ -94,7 +94,7 @@ class ManGenerator : public OutputGenerator
     void endHeaderSection();
     void startMemberHeader(const QCString &,int);
     void endMemberHeader();
-    void insertMemberAlign(bool) {}
+    void insertMemberAlign(bool,char) {}
     void insertMemberAlignLeft(int,bool){}
     void startMemberSubtitle() {}
     void endMemberSubtitle() {}
@@ -219,10 +219,10 @@ class ManGenerator : public OutputGenerator
     void endMemberDocPrefixItem() {}
     void startMemberDocName(bool) {}
     void endMemberDocName() {}
-    void startParameterType(bool,const QCString &) {}
+    void startParameterType(bool,const QCString &,bool) {}
     void endParameterType() {}
     void startParameterName(bool) {}
-    void endParameterName(bool,bool,bool) {}
+    void endParameterName(bool,bool,bool,bool) {}
     void startParameterList(bool) {}
     void endParameterList() {}
     void exceptionEntry(const QCString &,bool) {}

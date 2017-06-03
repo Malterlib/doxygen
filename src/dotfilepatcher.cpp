@@ -342,6 +342,11 @@ bool DotFilePatcher::run() const
   {
     QCString line = lineStr+'\n';
     //printf("line=[%s]\n",qPrint(line.stripWhiteSpace()));
+    if (line.find("<svg")!=-1 && !replacedHeader)
+    {
+      replacedHeader = true;
+      line = substitute(line, "pt\"", "px\"");
+    }
     int i;
     if (isSVGFile)
     {
@@ -354,6 +359,7 @@ bool DotFilePatcher::run() const
           //printf("width=%d height=%d\n",width,height);
           foundSize = count==2 && (width>500 || height>450);
           if (foundSize) insideHeader=TRUE;
+          line = substitute(line, "pt\"", "px\"");
         }
         else if (insideHeader && !replacedHeader && line.find("<title>")!=-1)
         {
@@ -399,7 +405,7 @@ bool DotFilePatcher::run() const
         //  qPrint(m_patchFile),map.zoomable);
         if (!writeSVGFigureLink(t,map.relPath,map.label,map.mapFile))
         {
-          err("Problem extracting size from SVG file %s\n",qPrint(map.mapFile));
+          err("Problem extracting size from SVG file '%s' in '%s'\n",qPrint(map.mapFile),qPrint(m_patchFile));
         }
         if (e!=-1) t << line.mid(e+3);
       }
@@ -521,7 +527,7 @@ static bool readSVGSize(const QCString &fileName,int *width,int *height)
       sscanf(line.c_str(),"<!--zoomable %d",height);
       found=true;
     }
-    else if (sscanf(line.c_str(),"<svg width=\"%dpt\" height=\"%dpt\"",width,height)==2)
+    else if (sscanf(line.c_str(),"<svg width=\"%dpx\" height=\"%dpx\"",width,height)==2)
     {
       found=true;
     }
@@ -552,7 +558,7 @@ bool DotFilePatcher::writeSVGFigureLink(TextStream &out,const QCString &relPath,
     //out << "<object type=\"image/svg+xml\" data=\""
     //out << "<embed type=\"image/svg+xml\" src=\""
     out << "<iframe scrolling=\"no\" frameborder=\"0\" src=\""
-        << relPath << baseName << ".svg\" width=\"100%\" height=\"" << height << "\">";
+        << relPath << baseName << ".svg\" width=\"100%\" height=\"" << height << "px\">";
   }
   else
   {
@@ -560,8 +566,8 @@ bool DotFilePatcher::writeSVGFigureLink(TextStream &out,const QCString &relPath,
     //out << "<embed type=\"image/svg+xml\" src=\""
     out << "<iframe scrolling=\"no\" frameborder=\"0\" src=\""
         << relPath << baseName << ".svg\" width=\""
-        << ((width*96+48)/72) << "\" height=\""
-        << ((height*96+48)/72) << "\">";
+        << width << "px\" height=\""
+        << height << "px\">";
   }
   writeSVGNotSupported(out);
   //out << "</object>";
@@ -607,16 +613,16 @@ bool DotFilePatcher::writeVecGfxFigure(TextStream &out,const QCString &baseName,
     // c*width/maxWidth > c*height/maxHeight, where c=maxWidth*maxHeight>0
     if (width*maxHeight>height*maxWidth)
     {
-      out << "\\includegraphics[width=" << maxWidth << "pt]";
+      out << "\\includegraphics[width=" << maxWidth << "px]";
     }
     else
     {
-      out << "\\includegraphics[height=" << maxHeight << "pt]";
+      out << "\\includegraphics[height=" << maxHeight << "px]";
     }
   }
   else
   {
-    out << "\\includegraphics[width=" << width << "pt]";
+    out << "\\includegraphics[width=" << width << "px]";
   }
 
   out << "{" << baseName << "}\n"

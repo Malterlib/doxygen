@@ -18,6 +18,7 @@
 
 #include <mutex>
 #include <sstream>
+#include <map>
 
 #include "message.h"
 #include "htmlgen.h"
@@ -584,12 +585,737 @@ void HtmlCodeGenerator::setRelativePath(const QCString &path)
   m_relPath = path;
 }
 
-void HtmlCodeGenerator::codify(const QCString &str)
+struct CPrefixMap
 {
-  int tabSize = Config_getInt(TAB_SIZE);
-  if (!str.isEmpty())
+  char const *m_pPrefix;
+  char const *m_pClass;
+  bool m_bVariable;
+};
+
+#define ignore(_Var)
+static CPrefixMap g_PrefixMap[] =
   {
-    const char *p=str.data();
+    {"t_", "highlight_template_non_type_param", true}                           ignore( t_Test )
+    , {"tp_", "highlight_template_non_type_param_pack", true}                   ignore( tp_Test )
+    , {"E", "highlight_enumerator", false}                                      ignore( ETest_Value ) // highlight_enum if it can be determined
+    , {"c_", "highlight_constant_variable", true}                               ignore( c_Test )
+    , {"gc_", "highlight_global_constant", true}                                ignore( gc_Test )
+    , {"mc_", "highlight_member_constant_public", true}                         ignore( mc_Test )
+    , {"mcp_", "highlight_member_constant_private", true}                       ignore( mcp_Test )
+    , {"tf_", "highlight_function_template_non_type_param", true}               ignore( tf_Test )
+    , {"tfp_", "highlight_function_template_non_type_param_pack", true}         ignore( tfp_Test )
+
+    , {"N", "highlight_namespace", false}                                       ignore( NTest )
+    , {"c", "highlight_concept", false}                                         ignore( cIsCallable )
+
+    , {"t_C", "highlight_template_type_param_class", false}                     ignore( t_CTest )
+    , {"t_F", "highlight_template_type_param_function", false}                  ignore( t_FTest )
+    , {"t_TC", "highlight_template_template_param", false}                      ignore( t_TCTest )
+    , {"tp_C", "highlight_template_type_param_class_pack", false}               ignore( tp_CTest )
+    , {"tp_F", "highlight_template_type_param_function_pack", false}            ignore( tp_FTest )
+    , {"tp_TC", "highlight_template_template_param_pack", false}                ignore( tp_TCTest )
+    , {"C", "highlight_type", false}                                            ignore( CTest )
+    , {"F", "highlight_type_function", false}                                   ignore( FTest )
+    , {"IC", "highlight_type_interface", false}                                 ignore( ICTest )
+    , {"TC", "highlight_template_type", false}                                  ignore( TCTest )
+    , {"TIC", "highlight_template_type_interface", false}                       ignore( TICTest )
+    , {"tf_C", "highlight_function_template_type_param_class", false}           ignore( tf_CTest )
+    , {"tf_F", "highlight_function_template_type_param_function", false}        ignore( tf_FTest )
+    , {"tf_TC", "highlight_function_template_template_param", false}            ignore( tf_TCTest )
+    , {"tfp_C", "highlight_function_template_type_param_class_pack", false}     ignore( tfp_CTest )
+    , {"tfp_F", "highlight_function_template_type_param_function_pack", false}  ignore( tfp_FTest )
+    , {"tfp_TC", "highlight_function_template_template_param_pack", false}      ignore( tfp_TCTest )
+
+    , {"_f", "highlight_function_parameter_functor", false}                     ignore( _fTest )
+    , {"p_f", "highlight_function_parameter_pack_functor", false}               ignore( p_fTest )
+    , {"o_f", "highlight_function_parameter_output_functor", false}             ignore( o_fTest )
+    , {"po_f", "highlight_function_parameter_output_pack_functor", false}       ignore( po_fTest )
+
+    , {"_of", "highlight_function_parameter_output_functor", false}             ignore( _ofTest ) // Deprecate?
+    , {"p_of", "highlight_function_parameter_output_pack_functor", false}       ignore( p_ofTest ) // Deprecate?
+
+    , {"f", "highlight_variable_functor", false}                                ignore( fTest )
+    , {"fl_", "highlight_variable_functor", false}                              ignore( fl_Test )// To be deprecated
+
+    , {"m_f", "highlight_member_variable_public_functor", false}                ignore( m_fTest )
+    , {"mp_f", "highlight_member_variable_private_functor", false}              ignore( mp_fTest )
+
+    , {"f_", "highlight_member_function_public", false}                         ignore( f_Test )
+    , {"fr_", "highlight_member_function_public_recursive", false}              ignore( fr_Test )
+    , {"f_r", "highlight_member_function_public_recursive", false}              ignore( f_rTest )
+    , {"fs_", "highlight_member_static_function_public", false}                 ignore( fs_Test )
+    , {"fsr_", "highlight_member_static_function_public_recursive", false}      ignore( fsr_Test )
+    , {"fs_r", "highlight_member_static_function_public_recursive", false}      ignore( fs_rTest )
+    , {"fp_", "highlight_member_function_private", false}                       ignore( fp_Test )
+    , {"fpr_", "highlight_member_function_private_recursive", false}            ignore( fpr_Test )
+    , {"fp_r", "highlight_member_function_private_recursive", false}            ignore( fp_rTest )
+    , {"fsp_", "highlight_member_static_function_private", false}               ignore( fsp_Test )
+    , {"fspr_", "highlight_member_static_function_private_recursive", false}    ignore( fspr_Test )
+    , {"fsp_r", "highlight_member_static_function_private_recursive", false}    ignore( fsp_rTest )
+    , {"fg_", "highlight_function", false}                                      ignore( fg_Test )
+    , {"fgr_", "highlight_function_recursive", false}                           ignore( fgr_Test )
+    , {"fg_r", "highlight_function_recursive", false}                           ignore( fg_rTest )
+    , {"fsg_", "highlight_static_function", false}                              ignore( fsg_Test )
+    , {"fsgr_", "highlight_static_function_recursive", false}                   ignore( fsgr_Test )
+    , {"fsg_r", "highlight_static_function_recursive", false}                   ignore( fsg_rTest )
+
+    , {"_", "highlight_function_parameter", true}                               ignore( _Test )
+    , {"p_", "highlight_function_parameter_pack", true}                         ignore( p_Test )
+    , {"o_", "highlight_function_parameter_output", true}                       ignore( o_Test )
+    , {"po_", "highlight_function_parameter_output_pack", true}                 ignore( po_Test )
+
+
+    , {"_o", "highlight_function_paramater_output", true}                       ignore( _oTest ) // Deprecate?
+    , {"p_o", "highlight_function_parameter_output_pack", true}                 ignore( p_oTest ) // Deprecate?
+
+
+    , {"m_", "highlight_member_variable_public", true}                          ignore( m_Test )
+    , {"mp_", "highlight_member_variable_private", true}                        ignore( mp_Test )
+
+    , {"D", "highlight_macro", false}                                           ignore( DTest )
+    , {"d_", "highlight_macro_parameter", true}                                 ignore( d_Test )
+
+    , {"ms_", "highlight_member_static_variable_public", true}                  ignore( ms_Test )
+    , {"ms_f", "highlight_member_static_variable_public_functor", false}        ignore( ms_fTest )
+    , {"msp_", "highlight_member_static_variable_private", true}                ignore( msp_Test )
+    , {"msp_f", "highlight_member_static_variable_private_functor", false}      ignore( msp_fTest )
+
+    , {"gs_", "highlight_global_static_variable", true}                         ignore( gs_Test )
+    , {"gs_f", "highlight_global_static_variable_functor", false}               ignore( gs_fTest )
+    , {"g_", "highlight_global_variable", true}                                 ignore( g_Test )
+    , {"g_f", "highlight_global_variable_functor", false}                       ignore( g_fTest )
+    , {"s_", "highlight_static_variable", true}                                 ignore( s_Test )
+    , {"s_f", "highlight_static_variable_functor", false}                       ignore( s_fTest )
+  }
+;
+
+
+struct CKeywordMap
+{
+  char const *m_pKeyword;
+  char const *m_pClass;
+};
+
+static CKeywordMap g_KeywordMap[] =
+  {
+    // Qualifiers
+    {"const", "highlight_keyword_qualifier"}
+    , {"volatile", "highlight_keyword_qualifier"}
+
+    // Storage class
+    , {"register", "highlight_keyword_storage_class"}
+    , {"static", "highlight_keyword_storage_class"}
+    , {"extern", "highlight_keyword_storage_class"}
+    , {"mutable", "highlight_keyword_storage_class"}
+
+    // built in types
+    , {"bool", "highlight_keyword_built_in_type"}
+    , {"void", "highlight_keyword_built_in_type"}
+    , {"bint", "highlight_keyword_built_in_type"}
+    , {"zbint", "highlight_keyword_built_in_type"}
+    , {"zbool", "highlight_keyword_built_in_type"}
+
+    // built in character types
+    , {"char", "highlight_keyword_built_in_character_type"}
+    , {"__wchar_t", "highlight_keyword_built_in_character_type"}
+    , {"wchar_t", "highlight_keyword_built_in_character_type"}
+    , {"ch8", "highlight_keyword_built_in_character_type"}
+    , {"ch16", "highlight_keyword_built_in_character_type"}
+    , {"ch32", "highlight_keyword_built_in_character_type"}
+    , {"uch8", "highlight_keyword_built_in_character_type"}
+    , {"uch16", "highlight_keyword_built_in_character_type"}
+    , {"uch32", "highlight_keyword_built_in_character_type"}
+
+    , {"zch8", "highlight_keyword_built_in_character_type"}
+    , {"zch16", "highlight_keyword_built_in_character_type"}
+    , {"zch32", "highlight_keyword_built_in_character_type"}
+    , {"zuch8", "highlight_keyword_built_in_character_type"}
+    , {"zuch16", "highlight_keyword_built_in_character_type"}
+    , {"zuch32", "highlight_keyword_built_in_character_type"}
+    , {"char16_t", "highlight_keyword_built_in_character_type"}
+    , {"char32_t", "highlight_keyword_built_in_character_type"}
+    , {"zuch32", "highlight_keyword_built_in_character_type"}
+
+
+    // built in integer types
+    , {"int", "highlight_keyword_built_in_integer_type"}
+    , {"size_t", "highlight_keyword_built_in_integer_type"}
+    , {"__int16", "highlight_keyword_built_in_integer_type"}
+    , {"__int32", "highlight_keyword_built_in_integer_type"}
+    , {"__int64", "highlight_keyword_built_in_integer_type"}
+    , {"__int8", "highlight_keyword_built_in_integer_type"}
+
+    , {"int8", "highlight_keyword_built_in_integer_type"}
+    , {"int16", "highlight_keyword_built_in_integer_type"}
+    , {"int32", "highlight_keyword_built_in_integer_type"}
+    , {"int64", "highlight_keyword_built_in_integer_type"}
+    , {"int80", "highlight_keyword_built_in_integer_type"}
+    , {"int128", "highlight_keyword_built_in_integer_type"}
+    , {"int160", "highlight_keyword_built_in_integer_type"}
+    , {"int256", "highlight_keyword_built_in_integer_type"}
+    , {"int512", "highlight_keyword_built_in_integer_type"}
+    , {"int1024", "highlight_keyword_built_in_integer_type"}
+    , {"int2048", "highlight_keyword_built_in_integer_type"}
+    , {"int4096", "highlight_keyword_built_in_integer_type"}
+    , {"int8192", "highlight_keyword_built_in_integer_type"}
+
+    , {"uint8", "highlight_keyword_built_in_integer_type"}
+    , {"uint16", "highlight_keyword_built_in_integer_type"}
+    , {"uint32", "highlight_keyword_built_in_integer_type"}
+    , {"uint64", "highlight_keyword_built_in_integer_type"}
+    , {"uint80", "highlight_keyword_built_in_integer_type"}
+    , {"uint128", "highlight_keyword_built_in_integer_type"}
+    , {"uint160", "highlight_keyword_built_in_integer_type"}
+    , {"uint256", "highlight_keyword_built_in_integer_type"}
+    , {"uint512", "highlight_keyword_built_in_integer_type"}
+    , {"uint1024", "highlight_keyword_built_in_integer_type"}
+    , {"uint2048", "highlight_keyword_built_in_integer_type"}
+    , {"uint4096", "highlight_keyword_built_in_integer_type"}
+    , {"uint8192", "highlight_keyword_built_in_integer_type"}
+
+    , {"zint8", "highlight_keyword_built_in_integer_type"}
+    , {"zuint8", "highlight_keyword_built_in_integer_type"}
+    , {"zint16", "highlight_keyword_built_in_integer_type"}
+    , {"zuint16", "highlight_keyword_built_in_integer_type"}
+    , {"zint32", "highlight_keyword_built_in_integer_type"}
+    , {"zuint32", "highlight_keyword_built_in_integer_type"}
+    , {"zint64", "highlight_keyword_built_in_integer_type"}
+    , {"zuint64", "highlight_keyword_built_in_integer_type"}
+    , {"zint80", "highlight_keyword_built_in_integer_type"}
+    , {"zuint80", "highlight_keyword_built_in_integer_type"}
+    , {"zint128", "highlight_keyword_built_in_integer_type"}
+    , {"zuint128", "highlight_keyword_built_in_integer_type"}
+    , {"zint160", "highlight_keyword_built_in_integer_type"}
+    , {"zuint160", "highlight_keyword_built_in_integer_type"}
+    , {"zint256", "highlight_keyword_built_in_integer_type"}
+    , {"zuint256", "highlight_keyword_built_in_integer_type"}
+    , {"zint512", "highlight_keyword_built_in_integer_type"}
+    , {"zuint512", "highlight_keyword_built_in_integer_type"}
+    , {"zint1024", "highlight_keyword_built_in_integer_type"}
+    , {"zuint1024", "highlight_keyword_built_in_integer_type"}
+    , {"zint2048", "highlight_keyword_built_in_integer_type"}
+    , {"zuint2048", "highlight_keyword_built_in_integer_type"}
+    , {"zint4096", "highlight_keyword_built_in_integer_type"}
+    , {"zuint4096", "highlight_keyword_built_in_integer_type"}
+    , {"zint8192", "highlight_keyword_built_in_integer_type"}
+    , {"zuint8192", "highlight_keyword_built_in_integer_type"}
+
+    , {"mint", "highlight_keyword_built_in_integer_type"}
+    , {"smint", "highlight_keyword_built_in_integer_type"}
+    , {"umint", "highlight_keyword_built_in_integer_type"}
+    , {"aint", "highlight_keyword_built_in_integer_type"}
+    , {"uaint", "highlight_keyword_built_in_integer_type"}
+
+    , {"zmint", "highlight_keyword_built_in_integer_type"}
+    , {"zumint", "highlight_keyword_built_in_integer_type"}
+    , {"zsmint", "highlight_keyword_built_in_integer_type"}
+    , {"zamint", "highlight_keyword_built_in_integer_type"}
+    , {"zuamint", "highlight_keyword_built_in_integer_type"}
+
+
+    // builtin type modifiers
+    , {"long", "highlight_keyword_built_in_type_modifier"}
+    , {"short", "highlight_keyword_built_in_type_modifier"}
+    , {"signed", "highlight_keyword_built_in_type_modifier"}
+    , {"unsigned", "highlight_keyword_built_in_type_modifier"}
+
+    // built in vector types
+    , {"__m128", "highlight_keyword_built_in_vector_type"}
+    , {"__m64", "highlight_keyword_built_in_vector_type"}
+    , {"__w64", "highlight_keyword_built_in_vector_type"}
+    , {"__m128i", "highlight_keyword_built_in_vector_type"}
+    , {"__m128d", "highlight_keyword_built_in_vector_type"}
+
+    // built in floating point types
+    , {"float", "highlight_keyword_built_in_float_type"}
+    , {"double", "highlight_keyword_built_in_float_type"}
+
+    , {"fp8", "highlight_keyword_built_in_float_type"}
+    , {"fp16", "highlight_keyword_built_in_float_type"}
+    , {"fp32", "highlight_keyword_built_in_float_type"}
+    , {"fp64", "highlight_keyword_built_in_float_type"}
+    , {"fp80", "highlight_keyword_built_in_float_type"}
+    , {"fp128", "highlight_keyword_built_in_float_type"}
+    , {"fp256", "highlight_keyword_built_in_float_type"}
+    , {"fp512", "highlight_keyword_built_in_float_type"}
+    , {"fp1024", "highlight_keyword_built_in_float_type"}
+    , {"fp2048", "highlight_keyword_built_in_float_type"}
+    , {"fp4096", "highlight_keyword_built_in_float_type"}
+    , {"ufp8", "highlight_keyword_built_in_float_type"}
+    , {"ufp16", "highlight_keyword_built_in_float_type"}
+    , {"ufp32", "highlight_keyword_built_in_float_type"}
+    , {"ufp64", "highlight_keyword_built_in_float_type"}
+    , {"ufp80", "highlight_keyword_built_in_float_type"}
+    , {"ufp128", "highlight_keyword_built_in_float_type"}
+    , {"ufp256", "highlight_keyword_built_in_float_type"}
+    , {"ufp512", "highlight_keyword_built_in_float_type"}
+    , {"ufp1024", "highlight_keyword_built_in_float_type"}
+    , {"ufp2048", "highlight_keyword_built_in_float_type"}
+    , {"ufp4096", "highlight_keyword_built_in_float_type"}
+
+    , {"zfp8", "highlight_keyword_built_in_float_type"}
+    , {"zfp16", "highlight_keyword_built_in_float_type"}
+    , {"zfp32", "highlight_keyword_built_in_float_type"}
+    , {"zfp64", "highlight_keyword_built_in_float_type"}
+    , {"zfp80", "highlight_keyword_built_in_float_type"}
+    , {"zfp128", "highlight_keyword_built_in_float_type"}
+    , {"zfp256", "highlight_keyword_built_in_float_type"}
+    , {"zfp512", "highlight_keyword_built_in_float_type"}
+    , {"zfp1024", "highlight_keyword_built_in_float_type"}
+    , {"zfp2048", "highlight_keyword_built_in_float_type"}
+    , {"zfp4096", "highlight_keyword_built_in_float_type"}
+    , {"zufp8", "highlight_keyword_built_in_float_type"}
+    , {"zufp16", "highlight_keyword_built_in_float_type"}
+    , {"zufp32", "highlight_keyword_built_in_float_type"}
+    , {"zufp64", "highlight_keyword_built_in_float_type"}
+    , {"zufp80", "highlight_keyword_built_in_float_type"}
+    , {"zufp128", "highlight_keyword_built_in_float_type"}
+    , {"zufp256", "highlight_keyword_built_in_float_type"}
+    , {"zufp512", "highlight_keyword_built_in_float_type"}
+    , {"zufp1024", "highlight_keyword_built_in_float_type"}
+    , {"zufp2048", "highlight_keyword_built_in_float_type"}
+    , {"zufp4096", "highlight_keyword_built_in_float_type"}
+
+    // bult in constants
+    , {"false", "highlight_keyword_built_in_constant"}
+    , {"true", "highlight_keyword_built_in_constant"}
+    , {"nullptr", "highlight_keyword_built_in_constant"}
+    , {"NULL", "highlight_keyword_built_in_constant"}
+
+
+    // Exception handling
+    , {"try", "highlight_keyword_exception_handling"}
+    , {"throw", "highlight_keyword_exception_handling"}
+    , {"catch", "highlight_keyword_exception_handling"}
+    , {"__try", "highlight_keyword_exception_handling"}
+    , {"__except", "highlight_keyword_exception_handling"}
+    , {"__finally", "highlight_keyword_exception_handling"}
+    , {"__leave", "highlight_keyword_exception_handling"}
+    , {"__raise", "highlight_keyword_exception_handling"}
+    , {"finally", "highlight_keyword_exception_handling"}
+
+    // Type introspection/type traits
+    , {"__alignof", "highlight_keyword_introspection"}
+    , {"sizeof", "highlight_keyword_introspection"}
+    , {"decltype", "highlight_keyword_introspection"}
+    , {"__uuidof", "highlight_keyword_introspection"}
+    , {"typeid", "highlight_keyword_introspection"}
+
+    // Static assert
+    , {"static_assert", "highlight_keyword_static_assert"}
+
+    // Control statements
+    , {"while", "highlight_keyword_control_statement"}
+    , {"for", "highlight_keyword_control_statement"}
+    , {"goto", "highlight_keyword_control_statement"}
+    , {"if", "highlight_keyword_control_statement"}
+    , {"do", "highlight_keyword_control_statement"}
+    , {"break", "highlight_keyword_control_statement"}
+    , {"case", "highlight_keyword_control_statement"}
+    , {"continue", "highlight_keyword_control_statement"}
+    , {"default", "highlight_keyword_control_statement"}
+    , {"else", "highlight_keyword_control_statement"}
+    , {"return", "highlight_keyword_control_statement"}
+    , {"switch", "highlight_keyword_control_statement"}
+
+    , {"co_await", "highlight_keyword_control_statement"}
+    , {"co_return", "highlight_keyword_control_statement"}
+    , {"co_yield", "highlight_keyword_control_statement"}
+
+    , {"likely", "highlight_keyword_control_statement"}
+    , {"unlikely", "highlight_keyword_control_statement"}
+    , {"assume", "highlight_keyword_control_statement"}
+
+    , {"yield_cpu", "highlight_keyword_control_statement"}
+
+    , {"constant_int64", "highlight_keyword_control_statement"}
+    , {"constant_uint64", "highlight_keyword_control_statement"}
+
+    , {"self", "highlight_keyword_control_statement"}
+
+    // Optimization
+    , {"__asm", "highlight_keyword_optimization"}
+    , {"__assume", "highlight_keyword_optimization"}
+
+    // Property modifiers
+    , {"__unaligned", "highlight_keyword_property_modifier"}
+    , {"__declspec", "highlight_keyword_property_modifier"}
+    , {"__based", "highlight_keyword_property_modifier"}
+    , {"deprecated", "highlight_keyword_property_modifier"}
+    , {"dllexport", "highlight_keyword_property_modifier"}
+    , {"dllimport", "highlight_keyword_property_modifier"}
+    , {"naked", "highlight_keyword_property_modifier"}
+    , {"noinline", "highlight_keyword_property_modifier"}
+    , {"noreturn", "highlight_keyword_property_modifier"}
+    , {"nothrow", "highlight_keyword_property_modifier"}
+    , {"noexcept", "highlight_keyword_property_modifier"}
+    , {"novtable", "highlight_keyword_property_modifier"}
+    , {"property", "highlight_keyword_property_modifier"}
+    , {"selectany", "highlight_keyword_property_modifier"}
+    , {"thread", "highlight_keyword_property_modifier"}
+    , {"uuid", "highlight_keyword_property_modifier"}
+    , {"explicit", "highlight_keyword_property_modifier"}
+    , {"__forceinline", "highlight_keyword_property_modifier"}
+    , {"__inline", "highlight_keyword_property_modifier"}
+    , {"inline", "highlight_keyword_property_modifier"}
+    , {"__cdecl", "highlight_keyword_property_modifier"}
+    , {"__thiscall", "highlight_keyword_property_modifier"}
+    , {"__fastcall", "highlight_keyword_property_modifier"}
+    , {"__stdcall", "highlight_keyword_property_modifier"}
+    , {"calling_convention_c", "highlight_keyword_property_modifier"}
+    , {"cdecl", "highlight_keyword_property_modifier"}
+    , {"stdcall", "highlight_keyword_property_modifier"}
+    , {"fastcall", "highlight_keyword_property_modifier"}
+    , {"inline_small", "highlight_keyword_property_modifier"}
+    , {"inline_always", "highlight_keyword_property_modifier"}
+    , {"inline_never", "highlight_keyword_property_modifier"}
+    , {"inline_never_debug", "highlight_keyword_property_modifier"}
+    , {"inline_medium", "highlight_keyword_property_modifier"}
+    , {"inline_large", "highlight_keyword_property_modifier"}
+    , {"inline_extralarge", "highlight_keyword_property_modifier"}
+    , {"inline_always_debug", "highlight_keyword_property_modifier"}
+    , {"module_export", "highlight_keyword_property_modifier"}
+    , {"module_import", "highlight_keyword_property_modifier"}
+    , {"only_parameters_aliased", "highlight_keyword_property_modifier"}
+    , {"return_not_aliased", "highlight_keyword_property_modifier"}
+    , {"function_does_not_return", "highlight_keyword_property_modifier"}
+    , {"variable_not_aliased", "highlight_keyword_property_modifier"}
+    , {"constexpr", "highlight_keyword_property_modifier"}
+    , {"__pragma", "highlight_keyword_property_modifier"}
+    , {"__attribute__", "highlight_keyword_property_modifier"}
+    , {"__restrict__", "highlight_keyword_property_modifier"}
+    , {"assure_used", "highlight_keyword_property_modifier"}
+    , {"align_cacheline", "highlight_keyword_property_modifier"}
+    , {"likely", "highlight_keyword_property_modifier"}
+    , {"unlikely", "highlight_keyword_property_modifier"}
+    , {"intrinsic", "highlight_keyword_property_modifier"}
+    , {"maybe_unused", "highlight_keyword_property_modifier"}
+    , {"carries_dependency", "highlight_keyword_property_modifier"}
+    , {"fallthrough", "highlight_keyword_property_modifier"}
+    , {"nodiscard", "highlight_keyword_property_modifier"}
+    , {"no_unique_address", "highlight_keyword_property_modifier"}
+    , {"optimize_for_synchronized", "highlight_keyword_property_modifier"}
+
+    // new/delete operators
+    , {"delete", "highlight_keyword_new_delete"}
+    , {"new", "highlight_keyword_new_delete"}
+
+    // CLR
+    , {"__abstract", "highlight_keyword_clr"}
+    , {"abstract", "highlight_keyword_clr"}
+    , {"__box", "highlight_keyword_clr"}
+    , {"__delegate", "highlight_keyword_clr"}
+    , {"__gc", "highlight_keyword_clr"}
+    , {"__hook", "highlight_keyword_clr"}
+    , {"__nogc", "highlight_keyword_clr"}
+    , {"__pin", "highlight_keyword_clr"}
+    , {"__property", "highlight_keyword_clr"}
+    , {"__sealed", "highlight_keyword_clr"}
+    , {"__try_cast", "highlight_keyword_clr"}
+    , {"__unhook", "highlight_keyword_clr"}
+    , {"__value", "highlight_keyword_clr"}
+    , {"event", "highlight_keyword_clr"}
+    , {"__identifier", "highlight_keyword_clr"}
+    , {"friend_as", "highlight_keyword_clr"}
+    , {"interface", "highlight_keyword_clr"}
+    , {"interior_ptr", "highlight_keyword_clr"}
+    , {"gcnew", "highlight_keyword_clr"}
+    , {"generic", "highlight_keyword_clr"}
+    , {"initonly", "highlight_keyword_clr"}
+    , {"literal", "highlight_keyword_clr"}
+    , {"ref", "highlight_keyword_clr"}
+    , {"safecast", "highlight_keyword_clr"}
+
+    // Other keywords
+    , {"__event", "highlight_keyword_other"}
+    , {"__if_exists", "highlight_keyword_other"}
+    , {"__if_not_exists", "highlight_keyword_other"}
+    , {"__interface", "highlight_keyword_other"}
+    , {"__multiple_inheritance", "highlight_keyword_other"}
+    , {"__single_inheritance", "highlight_keyword_other"}
+    , {"__virtual_inheritance", "highlight_keyword_other"}
+    , {"__super", "highlight_keyword_other"}
+    , {"__noop", "highlight_keyword_other"}
+
+    // Type specification keywords
+    , {"union", "highlight_keyword_type_specification"}
+    , {"class", "highlight_keyword_type_specification"}
+    , {"enum", "highlight_keyword_type_specification"}
+    , {"struct", "highlight_keyword_type_specification"}
+
+    // namespace
+    , {"namespace", "highlight_keyword_namespace"}
+
+    // typename
+    , {"typename", "highlight_keyword_typename"}
+
+    // template
+    , {"template", "highlight_keyword_template"}
+
+    // typedef
+    , {"typedef", "highlight_keyword_typedef"}
+
+    // using
+    , {"using", "highlight_keyword_using"}
+
+    // auto
+    , {"auto", "highlight_keyword_auto"}
+
+    // this
+    , {"this", "highlight_keyword_this"}
+
+    // operator
+    , {"operator", "highlight_keyword_operator"}
+
+    // Access keywords
+    , {"friend", "highlight_keyword_access"}
+    , {"private", "highlight_keyword_access"}
+    , {"public", "highlight_keyword_access"}
+    , {"protected", "highlight_keyword_access"}
+
+    // Virtual keywords
+    , {"final", "highlight_keyword_virtual"}
+    , {"sealed", "highlight_keyword_virtual"}
+    , {"override", "highlight_keyword_virtual"}
+    , {"virtual", "highlight_keyword_virtual"}
+    , {"pure", "highlight_keyword_pure"}
+
+    // casts
+    , {"const_cast", "highlight_keyword_casts"}
+    , {"dynamic_cast", "highlight_keyword_casts"}
+    , {"reinterpret_cast", "highlight_keyword_casts"}
+    , {"static_cast", "highlight_keyword_casts"}
+
+    // stl forced functionality
+    , {"std", "highlight_namespace"}
+    , {"experimental", "highlight_namespace"}
+
+    , {"coroutine_traits", "highlight_type"}
+    , {"coroutine_handle", "highlight_type"}
+    , {"suspend_always", "highlight_type"}
+    , {"suspend_never", "highlight_type"}
+    , {"promise_type", "highlight_type"}
+    , {"noop_coroutine_promise", "highlight_type"}
+    , {"noop_coroutine_handle", "highlight_type"}
+    , {"exception_ptr", "highlight_type"}
+
+    , {"pair", "highlight_template_type"}
+    , {"vector", "highlight_template_type"}
+    , {"list", "highlight_template_type"}
+    , {"slist", "highlight_template_type"}
+    , {"deque", "highlight_template_type"}
+    , {"priority_queue", "highlight_template_type"}
+    , {"stack", "highlight_template_type"}
+    , {"set", "highlight_template_type"}
+    , {"multiset", "highlight_template_type"}
+    , {"map", "highlight_template_type"}
+    , {"multimap", "highlight_template_type"}
+    , {"hash_set", "highlight_template_type"}
+    , {"hash_multiset", "highlight_template_type"}
+    , {"hash_map", "highlight_template_type"}
+    , {"hash_multimap", "highlight_template_type"}
+    , {"bitset", "highlight_template_type"}
+    , {"valarray", "highlight_template_type"}
+
+    , {"begin", "highlight_member_function_public"}
+    , {"end", "highlight_member_function_public"}
+
+    , {"await_transform", "highlight_member_function_public"}
+    , {"await_ready", "highlight_member_function_public"}
+    , {"await_suspend", "highlight_member_function_public"}
+    , {"await_resume", "highlight_member_function_public"}
+
+    , {"get_return_object", "highlight_member_function_public"}
+    , {"return_value", "highlight_member_function_public"}
+    , {"return_void", "highlight_member_function_public"}
+    , {"yield_value", "highlight_member_function_public"}
+    , {"initial_suspend", "highlight_member_function_public"}
+    , {"final_suspend", "highlight_member_function_public"}
+    , {"unhandled_exception", "highlight_member_function_public"}
+
+    , {"address", "highlight_member_function_public"}
+    , {"resume", "highlight_member_function_public"}
+    , {"destroy", "highlight_member_function_public"}
+    , {"done", "highlight_member_function_public"}
+    , {"promise", "highlight_member_function_public"}
+
+    , {"from_promise", "highlight_member_static_function_public"}
+
+    , {"rethrow_exception", "highlight_function"}
+    , {"uncaught_exceptions", "highlight_function"}
+    , {"current_exception", "highlight_function"}
+    , {"make_exception_ptr", "highlight_function"}
+
+    , {"make_exception_ptr", "highlight_function"}
+
+    , {"constant_int64", "highlight_macro"}
+    , {"constant_uint64", "highlight_macro"}
+    , {"str_utf8", "highlight_macro"}
+    , {"str_utf16", "highlight_macro"}
+    , {"str_utf32", "highlight_macro"}
+
+  }
+;
+static CKeywordMap g_KeywordMapPreprocessor[] =
+  {
+    {"define", "highlight_keyword_preprocessor_directive"}
+    , {"error", "highlight_keyword_preprocessor_directive"}
+    , {"import", "highlight_keyword_preprocessor_directive"}
+    , {"undef", "highlight_keyword_preprocessor_directive"}
+    , {"elif", "highlight_keyword_preprocessor_directive"}
+    , {"if", "highlight_keyword_preprocessor_directive"}
+    , {"include", "highlight_keyword_preprocessor_directive"}
+    , {"using", "highlight_keyword_preprocessor_directive"}
+    , {"else", "highlight_keyword_preprocessor_directive"}
+    , {"ifdef", "highlight_keyword_preprocessor_directive"}
+    , {"line", "highlight_keyword_preprocessor_directive"}
+    , {"endif", "highlight_keyword_preprocessor_directive"}
+    , {"ifndef", "highlight_keyword_preprocessor_directive"}
+    , {"pragma", "highlight_keyword_preprocessor_directive"}
+    , {"once", "highlight_keyword_preprocessor_directive"}
+  }
+;
+
+static char const g_Charset_Whitespace[] = "\r\n\t\v\b\f\a ";
+
+static char const g_Charset_Operators[] = ":;+-()[]{}<>!~*&.,/%=^|?";
+
+static char const g_Charset_StartIdentifier[] = "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+static char const g_Charset_Identifier[] = "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+static char const g_Charset_Alpha[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+static char const g_Charset_Number[] = "0123456789";
+static char const g_Charset_NumberHex[] = "0123456789abcdefABCDEF";
+
+static char const g_Charset_ValidConcept[] = "binpfr";
+
+static char const g_Charset_PreprocessorOperator[] = "#";
+static char const g_Charset_PreprocessorEscape[] = "\\";
+
+static char const g_Charset_UpperCaseChars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+bool fg_CharacterInSet(char _Character, char const *_pSet)
+{
+  char const *pSet = _pSet;
+  while (*pSet)
+  {
+    if (*pSet == _Character)
+      return true;
+    ++pSet;
+  }
+  return false;
+}
+
+const static int gc_MaxPrefixLen = 6;
+
+static std::map<QCString, CPrefixMap *> g_PrefixMapInfoVar[gc_MaxPrefixLen + 1];
+static std::map<QCString, CPrefixMap *> g_PrefixMapInfo[gc_MaxPrefixLen + 1];
+
+static std::map<QCString, CKeywordMap *> g_KeywordMapInfo;
+static std::map<QCString, CKeywordMap *> g_KeywordMapPreprocessorInfo;
+
+static bool g_bPrefixMapCreated = false;
+
+static void fg_CreateKeywordMap()
+{
+  {
+    int nKeywords = sizeof(g_KeywordMap) / sizeof(g_KeywordMap[0]);
+    for (int i = 0; i < nKeywords; ++i)
+    {
+      CKeywordMap *pPrefix = &g_KeywordMap[i];
+      g_KeywordMapInfo[pPrefix->m_pKeyword] = pPrefix;
+    }
+  }
+
+  {
+    int nKeywords = sizeof(g_KeywordMapPreprocessor) / sizeof(g_KeywordMapPreprocessor[0]);
+    for (int i = 0; i < nKeywords; ++i)
+    {
+      CKeywordMap *pPrefix = &g_KeywordMapPreprocessor[i];
+      g_KeywordMapPreprocessorInfo[pPrefix->m_pKeyword] = pPrefix;
+    }
+  }
+}
+
+static void fg_CreatePrefixMap()
+{
+  g_bPrefixMapCreated = true;
+  fg_CreateKeywordMap();
+  int nPrefixes = sizeof(g_PrefixMap) / sizeof(g_PrefixMap[0]);
+
+  for (int i = 0; i < nPrefixes; ++i)
+  {
+    CPrefixMap *pPrefix = &g_PrefixMap[i];
+
+    size_t PrefixLen = strlen(pPrefix->m_pPrefix);
+
+    std::map<QCString, CPrefixMap *> *pMapInfo = NULL;
+    if (pPrefix->m_bVariable)
+      pMapInfo = &g_PrefixMapInfoVar[PrefixLen];
+    else
+      pMapInfo = &g_PrefixMapInfo[PrefixLen];
+
+    (*pMapInfo)[pPrefix->m_pPrefix] = pPrefix;
+  }
+}
+
+static bool fg_MatchVariablePrefix(QCString const &_Identifier, QCString const &_ToMatch, size_t _MatchLength, size_t _IdentLength)
+{
+  if (!_Identifier.startsWith(_ToMatch))
+    return false;
+
+  size_t MatchLength = _MatchLength;
+  size_t IdentLength = _IdentLength;
+  if (IdentLength <= MatchLength)
+    return false;
+
+  auto Character = _Identifier[MatchLength];
+
+  if (fg_CharacterInSet(Character, g_Charset_UpperCaseChars))
+    return true;
+
+
+  if (!fg_CharacterInSet(Character, g_Charset_ValidConcept))
+    return false;
+
+  if (IdentLength <= MatchLength + 1)
+    return false;
+
+  Character = _Identifier[MatchLength + 1];
+
+  if (fg_CharacterInSet(Character, g_Charset_UpperCaseChars))
+    return true;
+
+  return false;
+}
+
+static bool fg_MatchOtherPrefix(QCString const &_Identifier, QCString const &_ToMatch, size_t _MatchLength, size_t _IdentLength)
+{
+  if (_IdentLength <= _MatchLength)
+    return false;
+  if (_Identifier.startsWith(_ToMatch) && fg_CharacterInSet(_Identifier[_ToMatch.length()], g_Charset_UpperCaseChars))
+    return true;
+  return false;
+}
+
+void HtmlCodeGenerator::handleDeferredCodify()
+{
+  if (m_deferredCodify.empty())
+    return;
+
+  char const *str = m_deferredCodify.c_str();
+
+  if (!g_bPrefixMapCreated)
+    fg_CreatePrefixMap();
+
+  int tabSize = Config_getInt(TAB_SIZE);
+  if (str)
+  {
+    if (m_inDocumentationComment && !m_inCommentStart && !m_inComment)
+      m_inDocumentationComment = false;
+
+    const char *p=str;
     char c;
     int spacesToNextTabStop;
     while (*p)
@@ -605,12 +1331,27 @@ void HtmlCodeGenerator::codify(const QCString &str)
         case '\n': m_t << "\n"; m_col=0;
                    break;
         case '\r': break;
-        case '<':  m_t << "&lt;"; m_col++;
-                   break;
-        case '>':  m_t << "&gt;"; m_col++;
-                   break;
-        case '&':  m_t << "&amp;"; m_col++;
-                   break;
+        case '<':
+          if (m_inComment || m_inChar || m_inString || m_inPreprocessor)
+            m_t << "&lt;";
+          else
+            m_t << "<span class=\"highlight_operator\">&lt;</span>";
+          m_col++;
+          break;
+        case '>':
+          if (m_inComment || m_inChar || m_inString || m_inPreprocessor)
+            m_t << "&gt;";
+          else
+            m_t << "<span class=\"highlight_operator\">&gt;</span>";
+          m_col++; 
+          break;
+        case '&':
+          if (m_inComment || m_inChar || m_inString || m_inPreprocessor)
+            m_t << "&amp;";
+          else
+            m_t << "<span class=\"highlight_operator\">&amp;</span>";
+          m_col++;
+          break;
         case '\'': m_t << "&#39;"; m_col++; // &apos; is not valid XHTML
                    break;
         case '"':  m_t << "&quot;"; m_col++;
@@ -625,31 +1366,285 @@ void HtmlCodeGenerator::codify(const QCString &str)
                    else if (*p==')')
                      { m_t << "\\&zwj;)"; m_col++;p++; }
                    else
-                     m_t << "\\";
+                   {
+                    if (*p == '\n')
+                      m_t << "<span class=\"highlight_preprocessor_escape\">\\</span>";
+                    else
+                      m_t << "\\";
+                   }
                    m_col++;
                    break;
         default:
           {
-            uchar uc = static_cast<uchar>(c);
-            if (uc<32)
+            if (m_inChar || m_inString)
             {
-              m_t << "&#x24" << hex[uc>>4] << hex[uc&0xF] << ";";
-              m_col++;
+              uchar uc = static_cast<uchar>(c);
+              if (uc<32)
+              {
+                m_t << "&#x24" << hex[uc>>4] << hex[uc&0xF] << ";";
+                m_col++;
+              }
+              else
+              {
+                p=writeUTF8Char(m_t,p-1);
+                m_col++;
+              }
+              break;
             }
-            else
+
+            if (!m_inComment && (fg_CharacterInSet(c, g_Charset_Number) || (c == '.' && fg_CharacterInSet(*p, g_Charset_Number))))
             {
-              p=writeUTF8Char(m_t,p-1);
-              m_col++;
+              bool bFoundNumber = false;
+              char const *pStart = p-1;
+              char const *pParse = p-1;
+              do
+              {
+                while (*pParse && fg_CharacterInSet(*pParse, g_Charset_Number))
+                  ++pParse;
+
+                bool bIsFloating = false;
+                if (*pParse == '.')
+                {
+                  bIsFloating = true;
+                  ++pParse;
+                  while (*pParse && fg_CharacterInSet(*pParse, g_Charset_Number))
+                    ++pParse;
+                }
+                else if (*pParse == 'E' || *pParse == 'e')
+                  bIsFloating = true;
+
+                if (bIsFloating)
+                {
+                  if (*pParse == 'E' || *pParse == 'e')
+                  {
+                    ++pParse;
+                    if (*pParse == '+' || *pParse == '-')
+                      ++pParse;
+                    if (!fg_CharacterInSet(*pParse, g_Charset_Number))
+                      break; // Invalid number
+                    while (*pParse && fg_CharacterInSet(*pParse, g_Charset_Number))
+                      ++pParse;
+                  }
+
+                  // Parse any suffixes
+                  while (fg_CharacterInSet(*pParse, g_Charset_Alpha))
+                    ++pParse;
+
+                  bFoundNumber = true;
+                }
+                else
+                {
+                  if (*pParse == 'X' || *pParse == 'x')
+                  {
+                    // Hex
+                    ++pParse;
+                    if (!fg_CharacterInSet(*pParse, g_Charset_NumberHex))
+                      break; // Invalid number
+                    while (fg_CharacterInSet(*pParse, g_Charset_NumberHex))
+                      ++pParse;
+
+                  }
+
+                  // Parse any suffixes
+                  while (fg_CharacterInSet(*pParse, g_Charset_Alpha))
+                    ++pParse;
+
+                  bFoundNumber = true;
+                }
+              }
+              while (false)
+                ;
+
+              if (bFoundNumber)
+              {
+                m_t << "<span class=\"highlight_number\">";
+                char const *pCopy = pStart;
+                while (pCopy != pParse)
+                {
+                  m_t << *pCopy;
+                  m_col++;
+                  ++pCopy;
+                }
+                p = pCopy;
+                m_t << "</span>";
+                break;
+              }
             }
+
+            if (!m_inComment && !m_inPreprocessor && fg_CharacterInSet(c, g_Charset_Operators))
+            {
+              m_t << "<span class=\"highlight_operator\">";
+              m_t << c;
+              m_col++;
+              while (*p && fg_CharacterInSet(*p, g_Charset_Operators))
+              {
+                m_t << *p;
+                m_col++;
+                ++p;
+              }
+              m_t << "</span>";
+              break;
+            }
+
+            if (m_inCommentStart)
+            {
+              m_inCommentStart = false;
+              if
+              (
+                (c == '/' && p[0] == '*' && p[1] == '*')
+                || (c == '/' && p[0] == '/' && p[1] == '/')
+              )
+              {
+                m_inDocumentationComment = true;
+                m_t << "<span class=\"highlight_documentation_comment\">";
+              }
+            }
+
+            if (m_inPreprocessor)
+            {
+              if (c == '\\')
+              {
+                m_t << "<span class=\"highlight_operator\">";
+                m_t << c;
+                m_col++;
+                while (*p && fg_CharacterInSet(*p, g_Charset_Operators))
+                {
+                  m_t << *p;
+                  m_col++;
+                  ++p;
+                }
+                m_t << "</span>";
+                break;
+              }
+            }
+
+            if (fg_CharacterInSet(c, g_Charset_StartIdentifier) || (m_inPreprocessor && c == '#'))
+            {
+              char const *pStart = p-1;
+              char const *pStartIdent = p-1;
+              char const *pParse = p-1;
+
+              char const *pClass = NULL;
+
+              if (*pParse == '#')
+              {
+                ++pParse;
+                while (*pParse && fg_CharacterInSet(*pParse, g_Charset_Whitespace))
+                  ++pParse;
+                pStartIdent = pParse;
+                if (!*pParse)
+                  pClass = "highlight_keyword_preprocessor_directive";
+              }
+
+              while (*pParse && fg_CharacterInSet(*pParse, g_Charset_Identifier))
+                ++pParse;
+
+              QCString Identifier(pStartIdent, pParse - pStartIdent);
+
+              if (!m_inComment)
+              {
+                if (m_inPreprocessor && !pClass)
+                {
+                  auto iKeyword = g_KeywordMapPreprocessorInfo.find(Identifier);
+                  if (iKeyword != g_KeywordMapPreprocessorInfo.end())
+                    pClass = iKeyword->second->m_pClass;
+                }
+                if (!pClass)
+                {
+                  auto iKeyword = g_KeywordMapInfo.find(Identifier);
+
+                  if (iKeyword != g_KeywordMapInfo.end())
+                    pClass = iKeyword->second->m_pClass;
+                }
+              }
+
+              int Length = Identifier.length();
+              if (!pClass && Length >= 3)
+              {
+                for (int i = gc_MaxPrefixLen; i >= 0; --i)
+                {
+                  if (i > Length)
+                    continue;
+
+                  QCString ToFind = Identifier.left(i);
+
+                  {
+                    auto iInfo = g_PrefixMapInfo[i].find(ToFind);
+                    if (iInfo != g_PrefixMapInfo[i].end())
+                    {
+                      if (fg_MatchOtherPrefix(Identifier, ToFind, i, Length))
+                      {
+                        if (i == 1 && ToFind.str().compare("E") == 0)
+                        {
+                          if (Identifier.find('_') >= 0)
+                            pClass = iInfo->second->m_pClass;
+                          else
+                            pClass = "highlight_enum";
+                        }
+                        else
+                          pClass = iInfo->second->m_pClass;
+
+                        break;
+                      }
+                    }
+                  }
+                  {
+                    auto iInfo = g_PrefixMapInfoVar[i].find(ToFind);
+                    if (iInfo != g_PrefixMapInfoVar[i].end())
+                    {
+                      if (fg_MatchVariablePrefix(Identifier, ToFind, i, Length))
+                      {
+                        pClass = iInfo->second->m_pClass;
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+
+              if (pClass)
+              {
+                m_t << "<span class=\"";
+                m_t << pClass;
+                m_t << "\">";
+              }
+
+              char const *pCopy = pStart;
+              while (pCopy != pParse)
+              {
+                m_t << *pCopy;
+                m_col++;
+                ++pCopy;
+              }
+              p = pCopy;
+              if (pClass)
+                m_t << "</span>";
+              break;
+            }
+
+            // Default
+
+            p=writeUTF8Char(m_t,p-1);
+            m_col++;
+
           }
           break;
       }
     }
   }
+  
+  m_deferredCodify = std::string();
+}
+
+void HtmlCodeGenerator::codify(const QCString &text)
+{
+  m_deferredCodify += text.str();
 }
 
 void HtmlCodeGenerator::docify(const QCString &str)
 {
+  handleDeferredCodify();
+
   //m_t << getHtmlDirEmbeddingChar(getTextDirByConfig(str));
 
   if (!str.isEmpty())
@@ -704,6 +1699,8 @@ void HtmlCodeGenerator::writeLineNumber(const QCString &ref,const QCString &file
   qsnprintf(lineNumber,maxLineNrStr,"%5d",l);
   qsnprintf(lineAnchor,maxLineNrStr,"l%05d",l);
 
+  handleDeferredCodify();
+
   if (!m_lineOpen)
   {
     m_t << "<div class=\"line\">";
@@ -718,8 +1715,10 @@ void HtmlCodeGenerator::writeLineNumber(const QCString &ref,const QCString &file
   }
   else
   {
-    codify(lineNumber);
+    docify(lineNumber);
   }
+  handleDeferredCodify();
+
   m_t << "</span>";
   m_col=0;
 }
@@ -744,6 +1743,7 @@ void HtmlCodeGenerator::_writeCodeLink(const QCString &className,
                                       const QCString &anchor, const QCString &name,
                                       const QCString &tooltip)
 {
+  handleDeferredCodify();
   if (!ref.isEmpty())
   {
     m_t << "<a class=\"" << className << "Ref\" ";
@@ -760,7 +1760,8 @@ void HtmlCodeGenerator::_writeCodeLink(const QCString &className,
   m_t << "\"";
   if (!tooltip.isEmpty()) m_t << " title=\"" << convertToHtml(tooltip) << "\"";
   m_t << ">";
-  docify(name);
+  codify(name);
+  handleDeferredCodify();
   m_t << "</a>";
   m_col+=name.length();
 }
@@ -770,6 +1771,8 @@ void HtmlCodeGenerator::writeTooltip(const QCString &id, const DocLinkInfo &docI
                                      const SourceLinkInfo &defInfo,
                                      const SourceLinkInfo &declInfo)
 {
+  handleDeferredCodify();
+  
   m_t << "<div class=\"ttc\" id=\"" << id << "\">";
   m_t << "<div class=\"ttname\">";
   if (!docInfo.url.isEmpty())
@@ -784,6 +1787,7 @@ void HtmlCodeGenerator::writeTooltip(const QCString &id, const DocLinkInfo &docI
     m_t << "\">";
   }
   docify(docInfo.name);
+  handleDeferredCodify();
   if (!docInfo.url.isEmpty())
   {
     m_t << "</a>";
@@ -793,6 +1797,7 @@ void HtmlCodeGenerator::writeTooltip(const QCString &id, const DocLinkInfo &docI
   {
     m_t << "<div class=\"ttdeci\">";
     docify(decl);
+    handleDeferredCodify();
     m_t << "</div>";
   }
   if (!desc.isEmpty())
@@ -849,6 +1854,7 @@ void HtmlCodeGenerator::writeTooltip(const QCString &id, const DocLinkInfo &docI
 
 void HtmlCodeGenerator::startCodeLine(bool)
 {
+  handleDeferredCodify();
   m_col=0;
   if (!m_lineOpen)
   {
@@ -859,6 +1865,7 @@ void HtmlCodeGenerator::startCodeLine(bool)
 
 void HtmlCodeGenerator::endCodeLine()
 {
+  handleDeferredCodify();
   if (m_col == 0)
   {
     m_t << " ";
@@ -873,16 +1880,43 @@ void HtmlCodeGenerator::endCodeLine()
 
 void HtmlCodeGenerator::startFontClass(const QCString &s)
 {
+  handleDeferredCodify();
   m_t << "<span class=\"" << s << "\">";
+  if (strcmp(s.str().c_str(), "comment") == 0)
+  {
+    m_inComment = true;
+    m_inCommentStart = true;
+    if (m_inDocumentationComment)
+      m_t << "<span class=\"highlight_documentation_comment\">";
+  }
+  else
+  {
+    m_inDocumentationComment = false;
+    if (strcmp(s.str().c_str(), "charliteral") == 0)
+      m_inChar = true;
+    else if (strcmp(s.str().c_str(), "stringliteral") == 0)
+      m_inString = true;
+    else if (strcmp(s.str().c_str(), "preprocessor_include") == 0)
+      m_inPreprocessor = true;
+  }
 }
 
 void HtmlCodeGenerator::endFontClass()
 {
+  handleDeferredCodify();
   m_t << "</span>";
+  if (m_inDocumentationComment && m_inComment)
+    m_t << "</span>";
+  m_inComment = false;
+  m_inCommentStart = false;
+  m_inChar = false;
+  m_inString = false;
+  m_inPreprocessor = false;
 }
 
 void HtmlCodeGenerator::writeCodeAnchor(const QCString &anchor)
 {
+  handleDeferredCodify();
   m_t << "<a id=\"" << anchor << "\" name=\"" << anchor << "\"></a>";
 }
 
@@ -1725,11 +2759,13 @@ void HtmlGenerator::endCompoundTemplateParams()
   m_t << "</div>";
 }
 
-void HtmlGenerator::insertMemberAlign(bool templ)
+void HtmlGenerator::insertMemberAlign(bool templ, char lastChar)
 {
   DBG_HTML(m_t << "<!-- insertMemberAlign -->\n")
   QCString className = templ ? "memTemplItemRight" : "memItemRight";
-  m_t << "&#160;</td><td class=\"" << className << "\" valign=\"bottom\">";
+  if (lastChar != '&' && lastChar != '*')
+    m_t << "&#160;";
+  m_t << "</td><td class=\"" << className << "\" valign=\"bottom\">";
 }
 
 void HtmlGenerator::insertMemberAlignLeft(int annoType, bool initTag)
@@ -1872,7 +2908,7 @@ void HtmlGenerator::startMemberDoc( const QCString &clName, const QCString &memN
 {
   DBG_HTML(m_t << "<!-- startMemberDoc -->\n";)
   m_t << "\n<h2 class=\"memtitle\">"
-      << "<span class=\"permalink\"><a href=\"#" << anchor << "\">&#9670;&nbsp;</a></span>";
+      << "<span class=\"permalink\"><a href=\"#" << anchor << "\">&#x2B25;&nbsp;</a></span>";
   docify(title);
   if (memTotal>1)
   {
@@ -1899,7 +2935,7 @@ void HtmlGenerator::startMemberDocName(bool /*align*/)
 {
   DBG_HTML(m_t << "<!-- startMemberDocName -->\n";)
 
-  m_t << "      <table class=\"memname\">\n";
+  m_t << "      <table class=\"memname\" cellspacing=\"0\" cellpadding=\"0\">\n";
 
   m_t << "        <tr>\n";
   m_t << "          <td class=\"memname\">";
@@ -1919,7 +2955,7 @@ void HtmlGenerator::startParameterList(bool openBracket)
   m_t << "</td>\n";
 }
 
-void HtmlGenerator::startParameterType(bool first,const QCString &key)
+void HtmlGenerator::startParameterType(bool first,const QCString &key,bool doLineBreak)
 {
   if (first)
   {
@@ -1929,9 +2965,12 @@ void HtmlGenerator::startParameterType(bool first,const QCString &key)
   else
   {
     DBG_HTML(m_t << "<!-- startParameterType -->\n";)
-    m_t << "        <tr>\n";
-    m_t << "          <td class=\"paramkey\">" << key << "</td>\n";
-    m_t << "          <td></td>\n";
+    if (doLineBreak)
+      m_t << "        <tr>\n";
+    if (doLineBreak || !key.isEmpty())
+      m_t << "          <td class=\"paramkey\">" << key << "</td>\n";
+    if (doLineBreak)
+      m_t << "          <td></td>\n";
     m_t << "          <td class=\"paramtype\">";
   }
 }
@@ -1948,12 +2987,12 @@ void HtmlGenerator::startParameterName(bool /*oneArgOnly*/)
   m_t << "          <td class=\"paramname\">";
 }
 
-void HtmlGenerator::endParameterName(bool last,bool emptyList,bool closeBracket)
+void HtmlGenerator::endParameterName(bool last,bool emptyList,bool closeBracket, bool doLineBreak)
 {
   DBG_HTML(m_t << "<!-- endParameterName -->\n";)
   if (last)
   {
-    if (emptyList)
+    if (emptyList || !doLineBreak)
     {
       if (closeBracket) m_t << "</td><td>)";
       m_t << "</td>\n";
@@ -1974,7 +3013,8 @@ void HtmlGenerator::endParameterName(bool last,bool emptyList,bool closeBracket)
   else
   {
     m_t << "</td>\n";
-    m_t << "        </tr>\n";
+    if (doLineBreak)
+      m_t << "        </tr>\n";
   }
 }
 

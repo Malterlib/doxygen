@@ -230,9 +230,12 @@ void DirDefImpl::writeDetailedDescription(OutputList &ol,const QCString &title)
       ol.disableAllBut(OutputGenerator::Html);
       ol.writeAnchor(QCString(),"details");
     ol.popGeneratorState();
-    ol.startGroupHeader();
-    ol.parseText(title);
-    ol.endGroupHeader();
+    if (title != " ")
+    {
+      ol.startGroupHeader();
+      ol.parseText(title);
+      ol.endGroupHeader();
+    }
 
     // repeat brief description
     if (!briefDescription().isEmpty() && Config_getBool(REPEAT_BRIEF))

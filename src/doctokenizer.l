@@ -759,7 +759,7 @@ LINENR {BLANK}*[1-9][0-9]*
                            return TK_NEWPARA;
                          }
                        }
-<St_CodeOpt>{BLANK}*"{"(".")?{LABELID}"}" {
+<St_CodeOpt>{BLANK}*"{"((".")?{LABELID})?("+"{LABELID})?"}" {
                          yyextra->token->name = yytext;
                          int i=yyextra->token->name.find('{'); /* } to keep vi happy */
                          yyextra->token->name = yyextra->token->name.mid(i+1,yyextra->token->name.length()-i-2);

@@ -465,7 +465,7 @@ class QCString
     }
 #endif
 
-    std::string str() const
+    std::string const &str() const
     {
       return m_rep;
     }

@@ -23,3 +23,12 @@ bool ArgumentList::hasDocumentation() const
   return std::any_of(begin(),end(),[](const Argument &a){ return a.hasDocumentation(); });
 }
 
+bool ArgumentList::hasTemplateDocumentation() const
+{
+  return std::any_of(begin(),end(),[](const Argument &a){ return a.hasTemplateDocumentation(); });
+}
+
+bool ArgumentList::allHidden() const
+{
+  return std::all_of(begin(),end(),[](const Argument &a){ return a.isHidden(); });
+}

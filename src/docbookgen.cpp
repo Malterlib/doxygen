@@ -969,7 +969,7 @@ void DocbookGenerator::startParameterName(bool)
 DB_GEN_C
   m_t << " ";
 }
-void DocbookGenerator::endParameterName(bool last,bool /*emptyList*/,bool closeBracket)
+void DocbookGenerator::endParameterName(bool last,bool /*emptyList*/,bool closeBracket, bool /*doLineBreak*/)
 {
 DB_GEN_C
   if (last)

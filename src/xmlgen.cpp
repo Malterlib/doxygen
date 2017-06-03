@@ -1790,7 +1790,7 @@ static void generateXMLForPage(PageDef *pd,TextStream &ti,bool isExample)
     QCString title;
     if (mainPageHasTitle())
     {
-      title = filterTitle(convertCharEntitiesToUTF8(Doxygen::mainPage->title()).str());
+      title = filterTitle(convertCharEntitiesToUTF8(Doxygen::mainPage->title()));
     }
     else
     {
@@ -1804,7 +1804,7 @@ static void generateXMLForPage(PageDef *pd,TextStream &ti,bool isExample)
     const SectionInfo *si = SectionManager::instance().find(pd->name());
     if (si)
     {
-      t << "    <title>" << convertToXML(filterTitle(convertCharEntitiesToUTF8(si->title()).str()))
+      t << "    <title>" << convertToXML(filterTitle(convertCharEntitiesToUTF8(si->title())))
         << "</title>\n";
     }
   }

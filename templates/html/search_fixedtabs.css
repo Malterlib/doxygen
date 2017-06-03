@@ -13,7 +13,7 @@
     right: 0px;
     width: 170px;
     z-index: 102;
-    background-color: white;
+    background-color: ##ff;
 }
 
 #MSearchBox .left
@@ -51,7 +51,7 @@
     width:111px;
     margin-left:20px;
     padding-left:4px;
-    color: #909090;
+    color: ##90;
     outline: none;
     font: 9pt Arial, Verdana, sans-serif;
 }
@@ -91,6 +91,6 @@
 }
 
 .MSearchBoxActive #MSearchField {
-    color: #000000;
+    color: ##00;
 }
 

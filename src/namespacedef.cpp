@@ -645,9 +645,12 @@ void NamespaceDefImpl::writeDetailedDescription(OutputList &ol,const QCString &t
       ol.disableAllBut(OutputGenerator::Html);
       ol.writeAnchor(QCString(),"details");
     ol.popGeneratorState();
-    ol.startGroupHeader();
-    ol.parseText(title);
-    ol.endGroupHeader();
+    if (title != " ")
+    {
+      ol.startGroupHeader();
+      ol.parseText(title);
+      ol.endGroupHeader();
+    }
 
     ol.startTextBlock();
     if (!briefDescription().isEmpty() && Config_getBool(REPEAT_BRIEF))
