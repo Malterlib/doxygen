@@ -1763,6 +1763,15 @@ void Config::checkAndCorrect()
   {
     gamma=240;
   }
+  int &inversion = ConfigImpl_getInt("HTML_COLORSTYLE_INVERT");
+  if (inversion<0)
+  {
+    inversion=0;
+  }
+  else if (inversion>255)
+  {
+    inversion=255;
+  }
 
   QCString mathJaxFormat = ConfigImpl_getEnum("MATHJAX_FORMAT");
   if (!mathJaxFormat.isEmpty() && mathJaxFormat!="HTML-CSS" &&

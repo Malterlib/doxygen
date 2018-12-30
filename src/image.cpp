@@ -206,25 +206,32 @@ static Color palette3[] =
   { 0x00, 0x00, 0x00, 0xff }
 };
 
+double Image::getColoredLumiance(int level,int invert,int gamma)
+{
+  double inversion = invert/255.0;
+  double lumiance = (level/255.0)*(1.0-inversion)+(1.0-(level/255.0))*(inversion);
+  return pow(lumiance,gamma/100.0); // luma (gamma corrected)
+}
 
 Image::Image(int w,int h)
 {
   static int hue   = Config_getInt(HTML_COLORSTYLE_HUE);
   static int sat   = Config_getInt(HTML_COLORSTYLE_SAT);
   static int gamma = Config_getInt(HTML_COLORSTYLE_GAMMA);
+  static int invert = Config_getInt(HTML_COLORSTYLE_INVERT);
 
   double red1,green1,blue1;
   double red2,green2,blue2;
 
   ColoredImage::hsl2rgb(hue/360.0,                  // hue
                         sat/255.0,                  // saturation
-                        pow(235/255.0,gamma/100.0), // luma (gamma corrected)
+                        getColoredLumiance(235,invert,gamma),
                         &red1,&green1,&blue1
                        );
 
   ColoredImage::hsl2rgb(hue/360.0,                  // hue
                         sat/255.0,                  // saturation
-                        pow(138/255.0,gamma/100.0), // luma (gamma corrected)
+                        getColoredLumiance(138,invert,gamma),
                         &red2,&green2,&blue2
                        );
 
@@ -491,7 +498,7 @@ void ColoredImage::hsl2rgb(double h,double s,double l,
 
 ColoredImage::ColoredImage(int width,int height,
            const uchar *greyLevels,const uchar *alphaLevels,
-           int saturation,int hue,int gamma)
+           int saturation,int hue,int gamma,int invert)
 {
   m_hasAlpha = alphaLevels!=0;
   m_width    = width;
@@ -504,7 +511,7 @@ ColoredImage::ColoredImage(int width,int height,
     double red,green,blue;
     hsl2rgb(hue/360.0,                            // hue
             saturation/255.0,                     // saturation
-            pow(greyLevels[i]/255.0,gamma/100.0), // luma (gamma corrected)
+            Image::getColoredLumiance(greyLevels[i],invert,gamma),
             &red,&green,&blue);
     r = (int)(red  *255.0);
     g = (int)(green*255.0);

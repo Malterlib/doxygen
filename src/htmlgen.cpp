@@ -1334,11 +1334,10 @@ void HtmlCodeGenerator::handleDeferredCodify()
                     {
                       if (i == 1 && ToFind.compare("E") == 0)
                       {
-                        pClass = iInfo.data()->m_pClass;
-                        /*if (NodeType == NodeType_IdentifierType)
-                          pColor = pEnum;
+                        if (Identifier.find('_') >= 0)
+                          pClass = iInfo.data()->m_pClass;
                         else
-                          pColor = pEnumerator;*/
+                          pClass = "highlight_enum";
                       }
                       else
                         pClass = iInfo.data()->m_pClass;

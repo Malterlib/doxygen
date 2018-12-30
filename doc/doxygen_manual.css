@@ -242,7 +242,7 @@ span.lineno a:hover {
 }
 
 div.ah, span.ah {
-	background-color: black;
+	background-color: ##00;
 	font-weight: bold;
 	color: #ffffff;
 	margin-bottom: 3px;
@@ -281,7 +281,7 @@ div.groupText {
 
 body {
         background-color: #CCCCCC;
-        color: black;
+        color: ##00;
         margin: 0;
 }
 

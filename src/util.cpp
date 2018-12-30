@@ -8254,6 +8254,8 @@ void writeColoredImgData(const char *dir,ColoredImgDataItem data[])
   static int hue   = Config_getInt(HTML_COLORSTYLE_HUE);
   static int sat   = Config_getInt(HTML_COLORSTYLE_SAT);
   static int gamma = Config_getInt(HTML_COLORSTYLE_GAMMA);
+  static int invert = Config_getInt(HTML_COLORSTYLE_INVERT);
+
   while (data->name)
   {
     QCString fileName;
@@ -8262,7 +8264,7 @@ void writeColoredImgData(const char *dir,ColoredImgDataItem data[])
     if (f.open(IO_WriteOnly))
     {
       ColoredImage img(data->width,data->height,data->content,data->alpha,
-                       sat,hue,gamma);
+                       sat,hue,gamma,invert);
       img.save(fileName);
     }
     else
@@ -8289,6 +8291,7 @@ QCString replaceColorMarkers(const char *str)
   static int hue   = Config_getInt(HTML_COLORSTYLE_HUE);
   static int sat   = Config_getInt(HTML_COLORSTYLE_SAT);
   static int gamma = Config_getInt(HTML_COLORSTYLE_GAMMA);
+  static int invert = Config_getInt(HTML_COLORSTYLE_INVERT);
   int i,l,sl=s.length(),p=0;
   while ((i=re.match(s,p,&l))!=-1)
   {
@@ -8302,7 +8305,8 @@ QCString replaceColorMarkers(const char *str)
     int red,green,blue;
     int level = HEXTONUM(lumStr[0])*16+HEXTONUM(lumStr[1]);
     ColoredImage::hsl2rgb(hue/360.0,sat/255.0,
-                          pow(level/255.0,gamma/100.0),&r,&g,&b);
+                          Image::getColoredLumiance(level,invert,gamma),
+                          &r,&g,&b);
     red   = (int)(r*255.0);
     green = (int)(g*255.0);
     blue  = (int)(b*255.0);

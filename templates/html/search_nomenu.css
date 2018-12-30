@@ -51,7 +51,7 @@
     width:111px;
     margin-left:20px;
     padding-left:4px;
-    color: #909090;
+    color: ##90;
     outline: none;
     font: 9pt Arial, Verdana, sans-serif;
     -webkit-border-radius: 0px;
@@ -92,7 +92,7 @@
 }
 
 .MSearchBoxActive #MSearchField {
-    color: #000000;
+    color: ##00;
 }
 
 /*---------------- Search filter selection */
@@ -131,7 +131,7 @@ span.SelectionMark {
 a.SelectItem {
     display: block;
     outline-style: none;
-    color: #000000; 
+    color: ##00; 
     text-decoration: none;
     padding-left:   6px;
     padding-right: 12px;
@@ -139,13 +139,13 @@ a.SelectItem {
 
 a.SelectItem:focus,
 a.SelectItem:active {
-    color: #000000; 
+    color: ##00; 
     outline-style: none;
     text-decoration: none;
 }
 
 a.SelectItem:hover {
-    color: #FFFFFF;
+    color: ##FF;
     background-color: ##50;
     outline-style: none;
     text-decoration: none;
@@ -164,7 +164,7 @@ iframe#MSearchResults {
     display: none;
     position: absolute;
     left: 0; top: 0;
-    border: 1px solid #000;
+    border: 1px solid ##00;
     background-color: ##F0;
     z-index:10000;
 }
@@ -246,11 +246,11 @@ DIV.searchresults {
 }
 
 .pages b {
-   color: white;
+   color: ##ff;
    padding: 5px 5px 3px 5px;
    background-image: url("../tab_a.png");
    background-repeat: repeat-x;
-   text-shadow: 0 1px 1px #000000;
+   text-shadow: 0 1px 1px ##00;
 }
 
 .pages {

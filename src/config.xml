@@ -2016,6 +2016,15 @@ hr.footer {
 ]]>
       </docs>
     </option>
+    <option type='int' id='HTML_COLORSTYLE_INVERT' minval='0' maxval='255' defval='0' depends='GENERATE_HTML'>
+      <docs>
+<![CDATA[
+ The \c HTML_COLORSTYLE_INVERT tag controls the inversion applied to
+ the luminance component of the colors in the HTML output. 0 applies no 
+ inversion and 255 applies full inversion.
+]]>
+      </docs>
+    </option>
     <option type='bool' id='HTML_TIMESTAMP' defval='0' depends='GENERATE_HTML'>
       <docs>
 <![CDATA[

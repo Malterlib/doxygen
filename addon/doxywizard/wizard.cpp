@@ -61,6 +61,8 @@
 #define STR_HTML_COLORSTYLE_HUE   QString::fromLatin1("HTML_COLORSTYLE_HUE")
 #define STR_HTML_COLORSTYLE_SAT   QString::fromLatin1("HTML_COLORSTYLE_SAT")
 #define STR_HTML_COLORSTYLE_GAMMA QString::fromLatin1("HTML_COLORSTYLE_GAMMA")
+#define STR_HTML_COLORSTYLE_INVERT QString::fromLatin1("HTML_COLORSTYLE_INVERT")
+
 
 static bool g_optimizeMapping[6][6] = 
 {

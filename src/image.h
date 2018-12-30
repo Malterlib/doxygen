@@ -43,6 +43,7 @@ class Image
     uint getHeight() const { return height; }
     uchar *getData() const { return data; }
     static uint stringLength(const char *s);
+    static double getColoredLumiance(int level,int invert,int gamma);
  
   private:
     int width;
@@ -56,7 +57,7 @@ class ColoredImage
   public:
     ColoredImage(int width,int height,
            const uchar *greyLevels,const uchar *alphaLevels,
-           int saturation,int hue,int gamma);
+           int saturation,int hue,int gamma, int invert);
    ~ColoredImage();
     bool save(const char *fileName);
     static void hsl2rgb(double h,double s,double l,

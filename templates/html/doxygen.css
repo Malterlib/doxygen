@@ -253,15 +253,15 @@ span.lineno {
 	padding-right: 4px;
 	text-align: right;
 	border-right: 2px solid #0F0;
-	background-color: #E8E8E8;
+	background-color: ##E8;
         white-space: pre;
 }
 span.lineno a {
-	background-color: #D8D8D8;
+	background-color: ##D8;
 }
 
 span.lineno a:hover {
-	background-color: #C8C8C8;
+	background-color: ##C8;
 }
 
 .lineno {
@@ -274,21 +274,21 @@ span.lineno a:hover {
 }
 
 div.ah, span.ah {
-	background-color: black;
+	background-color: ##00;
 	font-weight: bold;
 	color: ##ff;
 	margin-bottom: 3px;
 	margin-top: 3px;
 	padding: 0.2em;
-	border: solid thin #333;
+	border: solid thin ##3f;
 	border-radius: 0.5em;
 	-webkit-border-radius: .5em;
 	-moz-border-radius: .5em;
-	box-shadow: 2px 2px 3px #999;
-	-webkit-box-shadow: 2px 2px 3px #999;
+	box-shadow: 2px 2px 3px ##9f;
+	-webkit-box-shadow: 2px 2px 3px ##9f;
 	-moz-box-shadow: rgba(0, 0, 0, 0.15) 2px 2px 2px;
-	background-image: -webkit-gradient(linear, left top, left bottom, from(#eee), to(#000),color-stop(0.3, #444));
-	background-image: -moz-linear-gradient(center top, #eee 0%, #444 40%, #000 110%);
+	background-image: -webkit-gradient(linear, left top, left bottom, from(#eee), to(##00),color-stop(0.3, ##44));
+	background-image: -moz-linear-gradient(center top, ##ee 0%, ##44 40%, ##00 110%);
 }
 
 div.classindex ul {
@@ -312,8 +312,8 @@ div.groupText {
 }
 
 body {
-	background-color: white;
-	color: black;
+	background-color: ##ff;
+	color: ##00;
         margin: 0;
 }
 
@@ -519,7 +519,7 @@ table.memberdecls {
 
 .mdescLeft, .mdescRight {
 	padding: 0px 8px 4px 8px;
-	color: #555;
+	color: ##5f;
 }
 
 .memSeparator {
@@ -686,7 +686,7 @@ dl.reflist dd {
 }
 
 .paramname {
-	color: #602020;
+	color: ##40;
 	white-space: nowrap;
 }
 .paramname em {
@@ -742,7 +742,7 @@ span.mlabel {
         border-right:1px solid ##CC;
         border-bottom:1px solid ##CC;
 	text-shadow: none;
-	color: white;
+	color: ##ff;
 	margin-right: 4px;
 	padding: 2px 3px;
 	border-radius: 3px;
@@ -841,7 +841,7 @@ div.directory {
     width: 16px;
     display: inline-block;
     background-color: ##88;
-    color: white;
+    color: ##ff;
     text-align: center;
     border-radius: 4px;
     margin-left: 2px;
@@ -1472,7 +1472,7 @@ tr.heading h2 {
 #powerTip {
 	cursor: default;
 	white-space: nowrap;
-	background-color: white;
+	background-color: ##ff;
 	border: 1px solid gray;
 	border-radius: 4px 4px 4px 4px;
 	box-shadow: 1px 1px 7px gray;
@@ -1555,7 +1555,7 @@ tr.heading h2 {
 	margin: 0px -10px;
 }
 #powerTip.n:before {
-	border-top-color: #808080;
+	border-top-color: ##80;
 	border-width: 11px;
 	margin: 0px -11px;
 }
@@ -1584,7 +1584,7 @@ tr.heading h2 {
 }
 
 #powerTip.s:before, #powerTip.se:before, #powerTip.sw:before {
-	border-bottom-color: #808080;
+	border-bottom-color: ##80;
 	border-width: 11px;
 	margin: 0px -11px;
 }
@@ -1611,7 +1611,7 @@ tr.heading h2 {
 	margin-top: -10px;
 }
 #powerTip.e:before {
-	border-left-color: #808080;
+	border-left-color: ##80;
 	border-width: 11px;
 	top: 50%;
 	margin-top: -11px;
@@ -1627,7 +1627,7 @@ tr.heading h2 {
 	margin-top: -10px;
 }
 #powerTip.w:before {
-	border-right-color: #808080;
+	border-right-color: ##80;
 	border-width: 11px;
 	top: 50%;
 	margin-top: -11px;
