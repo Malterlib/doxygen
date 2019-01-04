@@ -53,7 +53,6 @@ static QCString g_header;
 static QCString g_footer;
 static QCString g_mathjax_code;
 
-
 // note: this is only active if DISABLE_INDEX=YES, if DISABLE_INDEX is disabled, this
 // part will be rendered inside menu.js
 static void writeClientSearchBox(FTextStream &t,const char *relPath)
@@ -770,6 +769,10 @@ static CKeywordMap g_KeywordMap[] =
     , {"return", "highlight_keyword_control_statement"}
     , {"switch", "highlight_keyword_control_statement"}
 
+    , {"co_await", "highlight_keyword_control_statement"}
+    , {"co_return", "highlight_keyword_control_statement"}
+    , {"co_yield", "highlight_keyword_control_statement"}
+
     , {"likely", "highlight_keyword_control_statement"}
     , {"unlikely", "highlight_keyword_control_statement"}
     , {"assume", "highlight_keyword_control_statement"}
@@ -926,7 +929,74 @@ static CKeywordMap g_KeywordMap[] =
     , {"reinterpret_cast", "highlight_keyword_casts"}
     , {"static_cast", "highlight_keyword_casts"}
 
-    // Preprocessor directive
+    // stl forced functionality
+    , {"std", "highlight_namespace"}
+    , {"experimental", "highlight_namespace"}
+
+    , {"coroutine_traits", "highlight_type"}
+    , {"coroutine_handle", "highlight_type"}
+    , {"suspend_always", "highlight_type"}
+    , {"suspend_never", "highlight_type"}
+    , {"promise_type", "highlight_type"}
+    , {"noop_coroutine_promise", "highlight_type"}
+    , {"noop_coroutine_handle", "highlight_type"}
+    , {"exception_ptr", "highlight_type"}
+
+    , {"pair", "highlight_template_type"}
+    , {"vector", "highlight_template_type"}
+    , {"list", "highlight_template_type"}
+    , {"slist", "highlight_template_type"}
+    , {"deque", "highlight_template_type"}
+    , {"priority_queue", "highlight_template_type"}
+    , {"stack", "highlight_template_type"}
+    , {"set", "highlight_template_type"}
+    , {"multiset", "highlight_template_type"}
+    , {"map", "highlight_template_type"}
+    , {"multimap", "highlight_template_type"}
+    , {"hash_set", "highlight_template_type"}
+    , {"hash_multiset", "highlight_template_type"}
+    , {"hash_map", "highlight_template_type"}
+    , {"hash_multimap", "highlight_template_type"}
+    , {"bitset", "highlight_template_type"}
+    , {"valarray", "highlight_template_type"}
+
+    , {"begin", "highlight_member_function_public"}
+    , {"end", "highlight_member_function_public"}
+
+    , {"await_transform", "highlight_member_function_public"}
+    , {"await_ready", "highlight_member_function_public"}
+    , {"await_suspend", "highlight_member_function_public"}
+    , {"await_resume", "highlight_member_function_public"}
+
+    , {"get_return_object", "highlight_member_function_public"}
+    , {"return_value", "highlight_member_function_public"}
+    , {"return_void", "highlight_member_function_public"}
+    , {"yield_value", "highlight_member_function_public"}
+    , {"initial_suspend", "highlight_member_function_public"}
+    , {"final_suspend", "highlight_member_function_public"}
+    , {"unhandled_exception", "highlight_member_function_public"}
+
+    , {"address", "highlight_member_function_public"}
+    , {"resume", "highlight_member_function_public"}
+    , {"destroy", "highlight_member_function_public"}
+    , {"done", "highlight_member_function_public"}
+    , {"promise", "highlight_member_function_public"}
+
+    , {"from_promise", "highlight_member_static_function_public"}
+
+    , {"rethrow_exception", "highlight_function"}
+    , {"uncaught_exceptions", "highlight_function"}
+    , {"current_exception", "highlight_function"}
+    , {"make_exception_ptr", "highlight_function"}
+
+    , {"make_exception_ptr", "highlight_function"}
+
+    , {"constant_int64", "highlight_macro"}
+    , {"constant_uint64", "highlight_macro"}
+    , {"str_utf8", "highlight_macro"}
+    , {"str_utf16", "highlight_macro"}
+    , {"str_utf32", "highlight_macro"}
+
   }
 ;
 static CKeywordMap g_KeywordMapPreprocessor[] =
@@ -948,7 +1018,6 @@ static CKeywordMap g_KeywordMapPreprocessor[] =
     , {"once", "highlight_keyword_preprocessor_directive"}
   }
 ;
-
 
 static char const g_Charset_Whitespace[] = "\r\n\t\v\b\f\a ";
 
